@@ -70,6 +70,11 @@ else
 
 endif
 
+# native file dialog
+nfd_project = subproject('nativefiledialog-extended')
+nfd_dep = nfd_project.get_variable('nfde_dep')
+deps += nfd_dep
+
 glfw_subproj = cmake.subproject('glfw', options: glfw_opt_vars)
 glfw_dep  = glfw_subproj.dependency('glfw')
 deps += glfw_dep
