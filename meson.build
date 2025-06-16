@@ -57,9 +57,10 @@ glfw_opt_vars = cmake.subproject_options()
 
 # linux only
 if build_machine.system() == 'linux'
-  glfw_opt_vars.add_cmake_defines({'GLFW_BUILD_WAYLAND': false, 'GLFW_BUILD_X11':true, 'GLFW_BUILD_EXAMPLES': false, 'GLFW_BUILD_TESTS': false, 'GLFW_BUILD_DOCS': false})
-  deps += dependency('dl')
-  deps += dependency('X11')
+  glfw_opt_vars.add_cmake_defines({'GLFW_BUILD_WAYLAND': false, 'GLFW_BUILD_X11': true, 'GLFW_BUILD_EXAMPLES': false, 'GLFW_BUILD_TESTS': false, 'GLFW_BUILD_DOCS': false})
+  deps += dependency('dl', required: true)
+  deps += dependency('dbus-1', required: true)
+  deps += dependency('X11', required: true)
 
 # windows only
 elif build_machine.system() == 'windows'
