@@ -11,6 +11,7 @@
 #define UI_ENABLE_VSYNC true
 #define UI_ENABLE_ANTIALIASING true
 #define UI_ANTIALIASING_MUT 8
+#define UI_SIDEBAR_WIDTH 30.0f
 
 // Paths
 #ifdef _WIN32
