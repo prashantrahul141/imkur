@@ -1,14 +1,26 @@
 #pragma once
+#include <cstdint>
+
+struct Image {
+  std::uint8_t *data;
+  std::int32_t width, height, channels;
+  const std::int32_t components_per_pixel = 4;
+};
 
 class Editor {
 public:
-  unsigned char *img_data;
+  Image img;
 
 public:
   /*
    * Constructor
    */
   Editor();
+
+  /*
+   * Cleans up resources
+   */
+  ~Editor();
 
   /*
    * Loads given image path into current editor context.
@@ -21,4 +33,9 @@ public:
    * Unloads the current loaded image.
    */
   void unload_image();
+
+  /*
+   * Saves images to the given path.
+   */
+  void save_image(const char *const path);
 };
