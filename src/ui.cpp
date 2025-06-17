@@ -5,17 +5,19 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_internal.h"
 #include "nfd.h"
+#include "src/app.hpp"
 #define NFD_NATIVE
 #include "nhlog.h"
 #include <GLFW/glfw3.h>
 #include <cassert>
 #include <cstdlib>
 
-// prepare filters for the dialog
 #ifdef _WIN32
+const wchar_t *default_path = L"default.png";
 static nfdfilteritem_t open_dialog_filter_list[1] = {
     {L"Image", L"png,jpg,jpeg"}};
 #else
+const char *default_path = "default.png";
 static nfdfilteritem_t open_dialog_filter_list[1] = {{"Image", "png,jpg,jpeg"}};
 #endif
 
@@ -229,6 +231,7 @@ void UI::menu_callback_file_open() {
       NFD_OpenDialog(&out_path, open_dialog_filter_list, 1, NULL);
   if (NFD_OKAY == result) {
     nhlog_info("UI: selected file = %s", out_path);
+    App::get_global_context()->editor.load_image(out_path);
     NFD_FreePath(out_path);
   } else if (NFD_ERROR == result) {
     nhlog_error("UI: failed to open file dialog.");
@@ -239,17 +242,12 @@ void UI::menu_callback_file_open() {
  * Called when menu item file -> save is called
  */
 void UI::menu_callback_save_open() {
-#ifdef _WIN32
-  const wchar_t *default_path = L"default.png";
-#else
-  const char *default_path = "default.png";
-#endif
-
   nfdchar_t *out_path;
   nfdresult_t result =
       NFD_SaveDialog(&out_path, open_dialog_filter_list, 1, NULL, default_path);
   if (NFD_OKAY == result) {
     nhlog_info("UI: selected file = %s", out_path);
+    App::get_global_context()->editor.save_image(out_path);
     NFD_FreePath(out_path);
   } else if (NFD_ERROR == result) {
     nhlog_error("UI: failed to open file dialog.");
