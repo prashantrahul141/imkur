@@ -21,10 +21,10 @@ typedef enum {
 /*
  * A single notification
  */
-typedef struct {
+struct Notification {
   const NotifType ntype;
   const char *msg;
-} Notification;
+};
 
 class UI {
 public:
