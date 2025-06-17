@@ -6,7 +6,7 @@
 #include "imgui_internal.h"
 #include "nfd.h"
 #define NFD_NATIVE
-#include "nhlog.hpp"
+#include "nhlog.h"
 #include <GLFW/glfw3.h>
 #include <cassert>
 #include <cstdlib>
@@ -115,7 +115,9 @@ UI::UI() noexcept {
 /*
  * Window should close
  */
-bool UI::should_close() { return glfwWindowShouldClose(this->window); }
+[[nodiscard]] bool UI::should_close() noexcept {
+  return glfwWindowShouldClose(this->window);
+}
 
 /*
  * Updates all ui related stuff

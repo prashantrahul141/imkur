@@ -1,6 +1,13 @@
-#include <cstdlib>
-#include <iostream>
+#include "nhlog.h"
+#include "src/config.hpp"
+#include "ui.hpp"
+
 int main(int argc, char *argv[]) {
-  std::cout << "Hello, world!" << std::endl;
+  nhlog_init(APPLICATION_DEBUG_LEVEL, NULL);
+  UI ui = UI();
+  while (!ui.should_close()) {
+    ui.update();
+  }
+
   return EXIT_SUCCESS;
 }

@@ -44,7 +44,7 @@ public:
    *
    * @returns whether the window should close
    */
-  bool should_close();
+  [[nodiscard]] bool should_close() noexcept;
 
   /*
    * Updates all ui related stuff
