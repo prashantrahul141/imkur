@@ -25,6 +25,7 @@ src_files = files(
   'src/main.cpp',
   'src/ui.cpp',
   'src/editor.cpp',
+  'src/app.cpp',
 
   # nhlog
   'thirdparty/nhlog.cpp',
