@@ -24,6 +24,9 @@ src_files = files(
   # app src files
   'src/main.cpp',
   'src/ui.cpp',
+  'src/editor.cpp',
+
+  # nhlog
   'thirdparty/nhlog.cpp',
 
   # imgui core files
@@ -34,7 +37,7 @@ src_files = files(
 
   # imgui additional files
   'thirdparty/imgui/backends/imgui_impl_opengl3.cpp',
-  'thirdparty/imgui/backends/imgui_impl_glfw.cpp'
+  'thirdparty/imgui/backends/imgui_impl_glfw.cpp',
 )
 
 deps = []
@@ -80,7 +83,7 @@ glfw_subproj = cmake.subproject('glfw', options: glfw_opt_vars)
 glfw_dep  = glfw_subproj.dependency('glfw')
 deps += glfw_dep
 
-executable('imkur', src_files, dependencies: deps, include_directories: includes,   cpp_args : ['-Wconversion', '-Wsign-conversion'])
+executable('imkur', src_files, dependencies: deps, include_directories: includes, cpp_args : ['-Wconversion', '-Wsign-conversion'])
 
 # plugins
 # message('building plugins')
