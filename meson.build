@@ -1,4 +1,4 @@
-project('imkur', ['cpp'], default_options : ['cpp_std=c++23', 'default_library=static'], license: 'Apache-2.0', license_files: ['LICENSE'], version: '0.1')
+project('imkur', ['cpp', 'c'], default_options : ['cpp_std=c++23', 'default_library=static'], license: 'Apache-2.0', license_files: ['LICENSE'], version: '0.1')
 
 cmake = import('cmake')
 cxxc = meson.get_compiler('cpp')
@@ -30,6 +30,9 @@ src_files = files(
   # nhlog
   'thirdparty/nhlog.cpp',
 
+  # glad
+  'thirdparty/glad/src/glad.c',
+
   # imgui core files
   'thirdparty/imgui/imgui.cpp',
   'thirdparty/imgui/imgui_draw.cpp',
@@ -39,6 +42,7 @@ src_files = files(
   # imgui additional files
   'thirdparty/imgui/backends/imgui_impl_opengl3.cpp',
   'thirdparty/imgui/backends/imgui_impl_glfw.cpp',
+
 )
 
 deps = []
@@ -47,6 +51,7 @@ includes = []
 includes += include_directories('./thirdparty')
 includes += include_directories('./thirdparty/imgui')
 includes += include_directories('./thirdparty/imgui/backends')
+includes += include_directories('./thirdparty/glad/include')
 
 # all platform required dependencies
 ## math lib
@@ -58,6 +63,8 @@ opengl_dep = dependency('opengl', required: true)
 deps += opengl_dep
 
 glfw_opt_vars = cmake.subproject_options()
+
+deps += dependency('GL', required: true)
 
 # linux only
 if build_machine.system() == 'linux'
