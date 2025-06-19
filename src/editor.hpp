@@ -1,4 +1,5 @@
 #pragma once
+#include "glad/glad.h"
 #include <cstdint>
 
 struct Image {
@@ -7,9 +8,14 @@ struct Image {
   const std::int32_t components_per_pixel = 4;
 };
 
+struct Texture {
+  GLuint texture_id;
+};
+
 class Editor {
 public:
   Image img;
+  Texture texture;
 
 public:
   /*
@@ -38,4 +44,10 @@ public:
    * Saves images to the given path.
    */
   void save_image(const char *const path);
+
+  /*
+   * Regen texture from image data.
+   * @returns true if succeeded, false if failed.
+   */
+  void regen_texture();
 };

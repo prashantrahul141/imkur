@@ -39,6 +39,7 @@ bool Editor::load_image(const char *const path) {
     return false;
   }
 
+  this->regen_texture();
   return true;
 }
 
@@ -70,4 +71,22 @@ void Editor::save_image(const char *const path) {
   } else {
     // app_notify(NOTIF_SUCCESS, "Save image");
   }
+}
+
+/*
+ * Regen texture from image data.
+ * @returns true if succeeded, false if failed.
+ */
+void Editor::regen_texture() {
+  glGenTextures(1, &this->texture.texture_id);
+  glBindTexture(GL_TEXTURE_2D, this->texture.texture_id);
+
+  // setup filtering parameters for display
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  // upload pixels into texture
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->img.width, this->img.height, 0,
+               GL_RGBA, GL_UNSIGNED_BYTE, this->img.data);
 }
