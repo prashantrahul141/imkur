@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glad/glad.h"
 #include "imgui.h"
 #include <GLFW/glfw3.h>
 #include <expected>
@@ -32,6 +33,10 @@ public:
   std::optional<std::shared_ptr<Notification>> current_notification;
   GLFWwindow *window;
   ImGuiIO *io;
+
+private:
+  float scale;
+  ImVec2 pan;
 
 public:
   /*
@@ -80,6 +85,7 @@ private:
    */
   void update_layout_menubar();
   void update_layout_sidebar();
+  void update_layout_image_window();
 
   /*
    * Renderes on screen
