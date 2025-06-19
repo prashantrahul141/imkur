@@ -1,14 +1,17 @@
 #include "ui.hpp"
 #include "config.hpp"
+#include "glad/glad.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_internal.h"
 #include "nfd.h"
 #include "src/app.hpp"
+#include <GLFW/glfw3.h>
+#include <algorithm>
+#include <cfloat>
 #define NFD_NATIVE
 #include "nhlog.h"
-#include <GLFW/glfw3.h>
 #include <cassert>
 #include <cstdlib>
 
@@ -22,13 +25,13 @@ static nfdfilteritem_t open_dialog_filter_list[1] = {{"Image", "png,jpg,jpeg"}};
 #endif
 
 static void glfw_error_callback(int error, const char *description) {
-  fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+  nhlog_error("GLFW ERROR :%d: %s", error, description);
 }
 
 /*
  * constructor
  */
-UI::UI() noexcept {
+UI::UI() noexcept : scale(1.0f), pan(ImVec2(0.0f, 0.0f)) {
   nhlog_info("UI: ui init");
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) {
@@ -107,6 +110,10 @@ UI::UI() noexcept {
 
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForOpenGL(window, true);
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    nhlog_fatal("UI: failed gladLoadGLLoader");
+    std::abort();
+  }
   ImGui_ImplOpenGL3_Init(glsl_version);
 
   this->window = window;
@@ -125,6 +132,9 @@ UI::UI() noexcept {
  * Updates all ui related stuff
  */
 void UI::update() {
+  ImVec4 clear_color = ImVec4(COLOR_PRIMARY_BACKGROUND);
+  glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+  glClear(GL_COLOR_BUFFER_BIT);
   nhlog_trace("UI: updating");
   if (this->update_state()) {
     // only rerender if needed
@@ -157,6 +167,7 @@ void UI::update_layout() {
   nhlog_trace("UI: update layout");
   update_layout_menubar();
   update_layout_sidebar();
+  update_layout_image_window();
 }
 
 /*
@@ -179,6 +190,16 @@ void UI::update_layout_menubar() {
 
     ImGui::EndMenu();
   }
+
+  ImGuiStyle &style = ImGui::GetStyle();
+  float size =
+      ImGui::CalcTextSize(UI_WINDOW_TITLE).x + style.FramePadding.x * 2.0f;
+  float avail = ImGui::GetContentRegionAvail().x;
+  float off = (avail - size) * 0.5f;
+  if (off > 0.0f)
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+  ImGui::Text(UI_WINDOW_TITLE);
+
   ImGui::EndMainMenuBar();
 }
 
@@ -192,6 +213,75 @@ void UI::update_layout_sidebar() {
   ImGui::End();
 }
 
+void UI::update_layout_image_window() {
+  Editor *editor = &App::get_global_context()->editor;
+  ImGuiIO &io = ImGui::GetIO();
+
+  ImGui::SetNextWindowPos(
+      ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
+      ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+  ImGui::SetNextWindowSize(
+      ImVec2(io.DisplaySize.x - 100.0f, io.DisplaySize.y - 100.0f));
+
+  ImGui::Begin("##IMAGE_WINDOW", NULL,
+               ImGuiWindowFlags_NoNav | (ImGuiWindowFlags_NoDecoration |
+                                         ImGuiWindowFlags_NoScrollWithMouse |
+                                         ImGuiWindowFlags_NoSavedSettings));
+  bool isHovered = ImGui::IsWindowHovered();
+
+  // hovered and scrolling
+  if (isHovered && 0.0f != io.MouseWheel) {
+
+    // with left ctrl key pressed: ZOOM
+    if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
+      float prev_scale = this->scale;
+      this->scale = 0 < io.MouseWheel ? this->scale * UI_IMAGE_ZOOM_RATE
+                                      : this->scale / UI_IMAGE_ZOOM_RATE;
+      nhlog_debug("UI: scale = %f", this->scale);
+      // stop zooming in or out when we reach 1.
+      if ((prev_scale < 1 && this->scale > 1) ||
+          (prev_scale > 1 && this->scale < 1)) {
+        this->scale = 1;
+      }
+
+      // clamp scale
+      this->scale =
+          std::clamp(this->scale, UI_IMAGE_MIN_SCALE, UI_IMAGE_MAX_SCALE);
+
+      // with left shift key pressed : HORIZONTAL SCROLL
+    } else if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+      float move = (float)editor->img.width * UI_IMAGE_SCROLL_RATE;
+      this->pan.x -= 0 < io.MouseWheel ? move : -move;
+      this->pan.x = std::clamp(this->pan.x, -ImGui::GetWindowSize().x,
+                               ImGui::GetWindowSize().x);
+      nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
+
+      // no keys are pressed: VERTICAL SCROLL
+    } else {
+      float move = (float)editor->img.height * UI_IMAGE_SCROLL_RATE;
+      this->pan.y -= 0 < io.MouseWheel ? move : -move;
+      this->pan.y = std::clamp(this->pan.y, -ImGui::GetWindowSize().y,
+                               ImGui::GetWindowSize().y);
+      nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
+    }
+  }
+
+  ImVec2 scaled_size = ImVec2((float)editor->img.width * this->scale,
+                              (float)editor->img.height * this->scale);
+
+  ImVec2 pos = ImVec2(
+      ((float)ImGui::GetWindowSize().x - scaled_size.x + this->pan.x) * 0.5f,
+      ((float)ImGui::GetWindowSize().y - scaled_size.y + this->pan.y) * 0.5f);
+
+  ImGui::SetCursorPos(pos);
+
+  ImGui::Image((ImTextureID)(intptr_t)editor->texture.texture_id,
+               ImVec2((float)editor->img.width * this->scale,
+                      (float)editor->img.height * this->scale));
+
+  ImGui::End();
+}
+
 /*
  * Renderes on screen
  */
@@ -202,9 +292,6 @@ void UI::update_draw() {
   int display_w, display_h;
   glfwGetFramebufferSize(window, &display_w, &display_h);
   glViewport(0, 0, display_w, display_h);
-  ImVec4 clear_color = ImVec4(COLOR_PRIMARY_BACKGROUND);
-  glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-  glClear(GL_COLOR_BUFFER_BIT);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glfwSwapBuffers(window);
 }
