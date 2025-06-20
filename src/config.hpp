@@ -12,11 +12,21 @@
 #define UI_ENABLE_ANTIALIASING true
 #define UI_ANTIALIASING_MUT 8
 #define UI_SIDEBAR_WIDTH 30.0f
+#define UI_BOTTOMBAR_HEIGHT 50.0f
 #define UI_IMAGE_ZOOM_RATE 1.3f
 #define UI_IMAGE_MAX_SCALE 10.f
 #define UI_IMAGE_MIN_SCALE 0.15f
 #define UI_IMAGE_SCROLL_RATE                                                   \
   10.0f / 100.0f // % of image to move when scrolled horizontally or vertically
+
+#define UI_SWATCH_1 1.0f, 1.0f, 1.0f, 1.0f
+#define UI_SWATCH_2 0.0f, 0.0f, 0.0f, 1.0f
+#define UI_SWATCH_3 1.0f, 0.0f, 0.0f, 1.0f
+#define UI_SWATCH_4 0.0f, 1.0f, 0.0f, 1.0f
+#define UI_SWATCH_5 0.0f, 0.0f, 1.0f, 1.0f
+#define UI_SWATCH_6 1.0f, 1.0f, 0.0f, 1.0f
+#define UI_SWATCH_7 0.0f, 1.0f, 1.0f, 1.0f
+#define UI_SWATCH_8 1.0f, 0.0f, 1.0f, 1.0f
 
 // Paths
 #ifdef _WIN32
@@ -26,7 +36,8 @@
 #endif
 #define PATH_RESOURCES_DIR "../resources"
 #define PATH_FONT_FILE PATH_RESOURCES_DIR PATH_SEPERATOR "Cousine-Regular.ttf"
+#define PATH_PLUGINS_DIR "../plugins"
 
 // Colors
 #define COLOR_PRIMARY_BACKGROUND                                               \
-  0.05882352941f, 0.05882352941f, 0.05882352941f, 1.00f
+  0.05882352941f, 0.05882352941f, 0.05882352941f, 1.0f
