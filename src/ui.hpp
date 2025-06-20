@@ -85,6 +85,7 @@ private:
    */
   void update_layout_menubar();
   void update_layout_sidebar();
+  void update_layout_bottombar();
   void update_layout_image_window();
 
   /*

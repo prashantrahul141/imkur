@@ -7,6 +7,7 @@
 #include "imgui_internal.h"
 #include "nfd.h"
 #include "src/app.hpp"
+#include "src/utils.hpp"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <cfloat>
@@ -167,6 +168,7 @@ void UI::update_layout() {
   nhlog_trace("UI: update layout");
   update_layout_menubar();
   update_layout_sidebar();
+  update_layout_bottombar();
   update_layout_image_window();
 }
 
@@ -213,15 +215,75 @@ void UI::update_layout_sidebar() {
   ImGui::End();
 }
 
+void UI::update_layout_bottombar() {
+  ImGuiViewportP *viewport = (ImGuiViewportP *)(void *)ImGui::GetMainViewport();
+
+  ImGui::BeginViewportSideBar(
+      "##BOTTOM_BAR", viewport, ImGuiDir_Down, UI_BOTTOMBAR_HEIGHT,
+      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
+          ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNavFocus);
+
+  ImGui::ColorButton(
+      "Active Color",
+      ColorToImVec4(App::get_global_context()
+                        ->editor.editor_state.primary_selected_color));
+  ImGui::SameLine(60.0f);
+  if (ImGui::ColorButton("White", ImVec4(UI_SWATCH_1))) {
+    App::get_global_context()->editor.editor_state.primary_selected_color =
+        ImVec4ToColor(ImVec4(UI_SWATCH_1));
+  }
+
+  ImGui::SameLine();
+  if (ImGui::ColorButton("Black", ImVec4(UI_SWATCH_2))) {
+    App::get_global_context()->editor.editor_state.primary_selected_color =
+        ImVec4ToColor(ImVec4(UI_SWATCH_2));
+  }
+
+  ImGui::SameLine();
+  if (ImGui::ColorButton("Red", ImVec4(UI_SWATCH_3))) {
+    App::get_global_context()->editor.editor_state.primary_selected_color =
+        ImVec4ToColor(ImVec4(UI_SWATCH_3));
+  }
+
+  ImGui::SameLine();
+  if (ImGui::ColorButton("Green", ImVec4(UI_SWATCH_4))) {
+    App::get_global_context()->editor.editor_state.primary_selected_color =
+        ImVec4ToColor(ImVec4(UI_SWATCH_4));
+  }
+
+  ImGui::SameLine();
+  if (ImGui::ColorButton("Blue", ImVec4(UI_SWATCH_5))) {
+    App::get_global_context()->editor.editor_state.primary_selected_color =
+        ImVec4ToColor(ImVec4(UI_SWATCH_5));
+  }
+
+  ImGui::SameLine();
+  if (ImGui::ColorButton("Yellow", ImVec4(UI_SWATCH_6))) {
+    App::get_global_context()->editor.editor_state.primary_selected_color =
+        ImVec4ToColor(ImVec4(UI_SWATCH_6));
+  }
+  ImGui::SameLine();
+  if (ImGui::ColorButton("Cyan", ImVec4(UI_SWATCH_7))) {
+    App::get_global_context()->editor.editor_state.primary_selected_color =
+        ImVec4ToColor(ImVec4(UI_SWATCH_7));
+  }
+  ImGui::SameLine();
+  if (ImGui::ColorButton("Magenta", ImVec4(UI_SWATCH_8))) {
+    App::get_global_context()->editor.editor_state.primary_selected_color =
+        ImVec4ToColor(ImVec4(UI_SWATCH_8));
+  }
+  ImGui::End();
+}
+
 void UI::update_layout_image_window() {
   Editor *editor = &App::get_global_context()->editor;
   ImGuiIO &io = ImGui::GetIO();
 
   ImGui::SetNextWindowPos(
-      ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
+      ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.49f),
       ImGuiCond_Always, ImVec2(0.5f, 0.5f));
   ImGui::SetNextWindowSize(
-      ImVec2(io.DisplaySize.x - 100.0f, io.DisplaySize.y - 100.0f));
+      ImVec2(io.DisplaySize.x - 130.0f, io.DisplaySize.y - 140.0f));
 
   ImGui::Begin("##IMAGE_WINDOW", NULL,
                ImGuiWindowFlags_NoNav | (ImGuiWindowFlags_NoDecoration |
