@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/editor.hpp"
+#include "src/plugins_manager.hpp"
 #include "src/ui.hpp"
 #include <cstdint>
 
@@ -8,6 +9,7 @@ class App {
 public:
   UI ui;
   Editor editor;
+  PluginManager plugins_manager;
 
 public:
   /*

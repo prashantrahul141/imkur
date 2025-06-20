@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include "src/editor.hpp"
+#include "src/plugins_manager.hpp"
 #include <cstdlib>
 
 static App *global_app_context = nullptr;
@@ -7,7 +8,9 @@ static App *global_app_context = nullptr;
 /*
  * Initializes all components of the application.
  */
-App::App() : ui(UI()), editor(Editor()) { global_app_context = this; }
+App::App() : ui(UI()), editor(Editor()), plugins_manager(PluginManager()) {
+  global_app_context = this;
+}
 
 /*
  * Cleans up resources
