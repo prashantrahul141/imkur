@@ -10,6 +10,7 @@ public:
   UI ui;
   Editor editor;
   PluginManager plugins_manager;
+  static App *global_app_context;
 
 public:
   /*
@@ -27,10 +28,4 @@ public:
    * @returns the exit code
    */
   const std::int32_t run();
-
-  /*
-   * Retrive the global app context;
-   * @returns pointer to global app context
-   */
-  static App *get_global_context();
 };

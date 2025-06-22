@@ -3,13 +3,15 @@
 #include "src/plugins_manager.hpp"
 #include <cstdlib>
 
-static App *global_app_context = nullptr;
+App *App::global_app_context = nullptr;
 
 /*
  * Initializes all components of the application.
  */
 App::App() : ui(UI()), editor(Editor()), plugins_manager(PluginManager()) {
-  global_app_context = this;
+  if (nullptr == global_app_context) {
+    global_app_context = this;
+  }
 }
 
 /*
@@ -27,9 +29,3 @@ const std::int32_t App::run() {
   }
   return EXIT_SUCCESS;
 }
-
-/*
- * Retrive the global app context;
- * @returns pointer to global app context
- */
-App *App::get_global_context() { return global_app_context; }
