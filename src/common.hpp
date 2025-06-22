@@ -30,6 +30,12 @@ struct Color {
   uint8_t r, g, b, a;
 };
 
+struct Image {
+  std::uint8_t *data;
+  std::int32_t width, height, channels;
+  const std::int32_t components_per_pixel = 4;
+};
+
 ImVec4 ColorToImVec4(Color c);
 Color ImVec4ToColor(ImVec4 c);
 
@@ -57,3 +63,4 @@ public:
 
 [[nodiscard]] std::vector<Vec2<std::int32_t>>
 get_surrounding_pixels(Vec2<std::int32_t> &center_pos,
+                       int32_t surround_circle_radius, Image &img);

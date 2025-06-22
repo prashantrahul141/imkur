@@ -3,15 +3,11 @@
 #include "glad/glad.h"
 #include <cstdint>
 
-struct Image {
-  std::uint8_t *data;
-  std::int32_t width, height, channels;
-  const std::int32_t components_per_pixel = 4;
-};
-
 struct EditorState {
   Color primary_selected_color;
   uint8_t opacity;
+  // radius of put pixel tool pointer.
+  int32_t put_pixel_size;
 };
 
 class Editor {
