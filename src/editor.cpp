@@ -2,7 +2,6 @@
 #include "imgui.h"
 #include "internal.h"
 #include "nhlog.h"
-#include "src/ui.hpp"
 #include <cstddef>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -17,6 +16,7 @@ Editor::Editor() {
   this->img.data = nullptr;
   this->img.width = this->img.height = this->img.channels = 0;
   this->editor_state.opacity = 100;
+  this->editor_state.put_pixel_size = 1;
   this->editor_state.primary_selected_color =
       Color{.r = 255, .g = 255, .b = 255, .a = 255};
 }
@@ -37,7 +37,6 @@ Editor::~Editor() {
 bool Editor::load_image(const char *const path) {
   nhlog_debug("Editor: load_image(path = %s)", path);
   this->unload_image();
-
   this->img.data = stbi_load(path, &this->img.width, &this->img.height,
                              &this->img.channels, 0);
 
@@ -76,8 +75,10 @@ void Editor::save_image(const char *const path) {
     return;
   }
 
-  if (!stbi_write_png(path, this->img.width, this->img.height,
-                      this->img.channels, this->img.data, 0)) {
+  if (!stbi_write_png(path, static_cast<int>(this->img.width),
+                      static_cast<int>(this->img.height),
+                      static_cast<int>(this->img.channels), this->img.data,
+                      0)) {
     // app_notify(NOTIF_ERROR, "Failed to save image.");
   } else {
     // app_notify(NOTIF_SUCCESS, "Save image");
