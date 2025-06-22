@@ -11,7 +11,7 @@
 #define UI_ENABLE_VSYNC true
 #define UI_ENABLE_ANTIALIASING true
 #define UI_ANTIALIASING_MUT 8
-#define UI_SIDEBAR_WIDTH 30.0f
+#define UI_SIDEBAR_WIDTH 60.0f
 #define UI_BOTTOMBAR_HEIGHT 50.0f
 #define UI_IMAGE_ZOOM_RATE 1.3f
 #define UI_IMAGE_MAX_SCALE 10.f
@@ -41,3 +41,13 @@
 // Colors
 #define COLOR_PRIMARY_BACKGROUND                                               \
   0.05882352941f, 0.05882352941f, 0.05882352941f, 1.0f
+#define COLOR_SECONDARY_BACKGROUND                                             \
+  0.06882352943f, 0.06882352941f, 0.06882352941f, 1.0f
+
+#define _COLOR_ICON_R 255
+#define _COLOR_ICON_G 255
+#define _COLOR_ICON_B 255
+#define _COLOR_ICON_A 255
+#define COLOR_ICON                                                             \
+  (_COLOR_ICON_R << 24) + (_COLOR_ICON_G << 16) + (_COLOR_ICON_B << 8) +       \
+      _COLOR_ICON_A
