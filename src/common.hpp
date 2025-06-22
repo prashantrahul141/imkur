@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include <cassert>
 #include <cstdint>
+#include <vector>
 
 #ifndef BREAKPOINT
 #if defined(_MSC_VER)
@@ -31,3 +32,28 @@ struct Color {
 
 ImVec4 ColorToImVec4(Color c);
 Color ImVec4ToColor(ImVec4 c);
+
+template <typename T> class Vec2 {
+public:
+  T x, y;
+  Vec2() : x(0), y(0) {}
+  Vec2(ImVec2 vec) : x((T)vec.x), y((T)vec.y) {}
+  Vec2(T x, T y) : x(x), y(y) {}
+  Vec2<T> operator+(const Vec2<T> &other) {
+    return Vec2(this->x + other.x, this->y + other.y);
+  }
+  Vec2<T> operator-(const Vec2<T> &other) {
+    return Vec2(this->x - other.x, this->y - other.y);
+  }
+  Vec2<T> operator*(const Vec2<T> &other) {
+    return Vec2(this->x * other.x, this->y * other.y);
+  }
+  Vec2<T> operator/(const Vec2<T> &other) {
+    return Vec2(this->x / other.x, this->y / other.y);
+  }
+
+  ImVec2 to_imvec2() { return ImVec2((float)this->x, (float)this->y); }
+};
+
+[[nodiscard]] std::vector<Vec2<std::int32_t>>
+get_surrounding_pixels(Vec2<std::int32_t> &center_pos,
