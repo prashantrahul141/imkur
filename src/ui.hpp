@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 #include "imgui.h"
 #include <GLFW/glfw3.h>
+#include <cstdint>
 #include <expected>
 #include <memory>
 #include <queue>
@@ -37,6 +38,7 @@ public:
 private:
   float scale;
   ImVec2 pan;
+  int32_t active_plugin_index;
 
 public:
   /*
