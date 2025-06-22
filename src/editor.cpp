@@ -1,5 +1,9 @@
 #include "editor.hpp"
+#include "imgui.h"
+#include "internal.h"
 #include "nhlog.h"
+#include "src/ui.hpp"
+#include <cstddef>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -12,6 +16,9 @@ Editor::Editor() {
   nhlog_debug("Editor: init");
   this->img.data = nullptr;
   this->img.width = this->img.height = this->img.channels = 0;
+  this->editor_state.opacity = 100;
+  this->editor_state.primary_selected_color =
+      Color{.r = 255, .g = 255, .b = 255, .a = 255};
 }
 
 /*
@@ -31,13 +38,17 @@ bool Editor::load_image(const char *const path) {
   nhlog_debug("Editor: load_image(path = %s)", path);
   this->unload_image();
 
-  this->img.data =
-      stbi_load(path, &this->img.width, &this->img.height, &this->img.channels,
-                this->img.components_per_pixel);
+  this->img.data = stbi_load(path, &this->img.width, &this->img.height,
+                             &this->img.channels, 0);
 
   if (nullptr == this->img.data) {
     return false;
   }
+
+  nhlog_debug("Editor: loaded image = %s, width = %d, height = %d, channels = "
+              "%d, components_per_pixel = %d",
+              path, this->img.width, this->img.height, this->img.channels,
+              this->img.components_per_pixel);
 
   this->regen_texture();
   return true;
@@ -51,6 +62,7 @@ void Editor::unload_image() {
     nhlog_debug("Editor: unloading existing image data.");
     stbi_image_free(this->img.data);
     this->img.data = nullptr;
+    glDeleteTextures(1, &this->texture.texture_id);
   }
 }
 
@@ -59,14 +71,13 @@ void Editor::unload_image() {
  */
 void Editor::save_image(const char *const path) {
   nhlog_debug("Editor: saving image");
-  __builtin_dump_struct(&this->img, printf);
   if (nullptr == this->img.data) {
     // app_notify(NOTIF_ERROR, "no image.");
     return;
   }
 
   if (!stbi_write_png(path, this->img.width, this->img.height,
-                      this->img.components_per_pixel, this->img.data, 0)) {
+                      this->img.channels, this->img.data, 0)) {
     // app_notify(NOTIF_ERROR, "Failed to save image.");
   } else {
     // app_notify(NOTIF_SUCCESS, "Save image");
@@ -78,6 +89,7 @@ void Editor::save_image(const char *const path) {
  * @returns true if succeeded, false if failed.
  */
 void Editor::regen_texture() {
+  glDeleteTextures(1, &this->texture.texture_id);
   glGenTextures(1, &this->texture.texture_id);
   glBindTexture(GL_TEXTURE_2D, this->texture.texture_id);
 
@@ -87,6 +99,36 @@ void Editor::regen_texture() {
 
   // upload pixels into texture
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->img.width, this->img.height, 0,
-               GL_RGBA, GL_UNSIGNED_BYTE, this->img.data);
+  GLint format = this->img.channels == 4 ? GL_RGBA : GL_RGB;
+  glTexImage2D(GL_TEXTURE_2D, 0, format, (int)this->img.width,
+               (int)this->img.height, 0, (GLuint)format, GL_UNSIGNED_BYTE,
+               this->img.data);
+}
+
+/*
+ * Get color at a specific location.
+ */
+Color Editor::get_pixel(std::int32_t x, std::int32_t y) {
+  const stbi_uc *p = this->img.data + (4 * (y * this->img.width + x));
+  return {.r = p[0], .g = p[1], .b = p[2], .a = p[3]};
+}
+
+/*
+ * Puts color at a specific location.
+ */
+void Editor::put_pixel(Color color, ImVec2 pos) {
+  nhlog_debug("Editor: put_pixel color = (%d, %d, %d, %d), pos = (%f, %f)",
+              color.r, color.g, color.b, color.a, pos.x, pos.y);
+
+  size_t index =
+      (static_cast<size_t>(pos.y) * static_cast<size_t>(this->img.width) +
+       static_cast<size_t>(pos.x)) *
+      static_cast<size_t>(this->img.channels);
+
+  this->img.data[index] = color.r;
+  this->img.data[index + 1] = color.g;
+  this->img.data[index + 2] = color.b;
+  //  this->img.data[index + 3] = color.a;
+
+  this->regen_texture();
 }
