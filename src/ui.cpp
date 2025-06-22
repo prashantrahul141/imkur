@@ -300,6 +300,15 @@ void UI::update_layout_bottombar() {
     App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_8));
   }
+
+  ImGui::SameLine();
+  ImGui::InputInt("#PUT_PIXEL_SIZE",
+                  &App::global_app_context->editor.editor_state.put_pixel_size);
+
+  // clamp minimum to 1.
+  App::global_app_context->editor.editor_state.put_pixel_size =
+      std::max(1, App::global_app_context->editor.editor_state.put_pixel_size);
+
   ImGui::End();
 }
 
@@ -318,14 +327,17 @@ void UI::update_layout_image_window() {
                                          ImGuiWindowFlags_NoScrollWithMouse |
                                          ImGuiWindowFlags_NoSavedSettings));
 
-  ImVec2 image_scaled_size = ImVec2((float)editor->img.width * this->scale,
-                                    (float)editor->img.height * this->scale);
+  Vec2<std::int32_t> image_scaled_size =
+      Vec2(static_cast<std::int32_t>((float)editor->img.width * this->scale),
+           static_cast<std::int32_t>((float)editor->img.height * this->scale));
 
-  ImVec2 top_left_of_image_relative_to_image_window = ImVec2(
-      ((float)ImGui::GetWindowSize().x - image_scaled_size.x + this->pan.x) *
-          0.5f,
-      ((float)ImGui::GetWindowSize().y - image_scaled_size.y + this->pan.y) *
-          0.5f);
+  Vec2<std::int32_t> top_left_of_image_relative_to_image_window = Vec2(
+      static_cast<std::int32_t>((ImGui::GetWindowSize().x -
+                                 (float)image_scaled_size.x + this->pan.x) *
+                                0.5f),
+      static_cast<std::int32_t>((ImGui::GetWindowSize().y -
+                                 (float)image_scaled_size.y + this->pan.y) *
+                                0.5f));
 
   // clicked over the image.
   if (ImGui::IsWindowHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
@@ -333,16 +345,16 @@ void UI::update_layout_image_window() {
 
     EditorState es = App::global_app_context->editor.editor_state;
     // calc mouse position relative to image.
-    ImVec2 absolute_mouse_pos = ImGui::GetMousePos();
-    ImVec2 window_pos = ImGui::GetWindowPos();
-    ImVec2 image_window_size = ImGui::GetWindowSize();
-    ImVec2 relative_mouse_pos = ImVec2(absolute_mouse_pos.x - window_pos.x,
-                                       absolute_mouse_pos.y - window_pos.y);
+    Vec2 absolute_mouse_pos = Vec2<std::int32_t>(ImGui::GetMousePos());
+    Vec2 window_pos = Vec2<std::int32_t>(ImGui::GetWindowPos());
+    Vec2 image_window_size = Vec2<std::int32_t>(ImGui::GetWindowSize());
+    Vec2 relative_mouse_pos = Vec2(absolute_mouse_pos.x - window_pos.x,
+                                   absolute_mouse_pos.y - window_pos.y);
 
     // make sure mouse position is inside the image window.
-    if (relative_mouse_pos.x > 0.0f &&
+    if (relative_mouse_pos.x > 0 &&
         relative_mouse_pos.x < image_window_size.x &&
-        relative_mouse_pos.y > 0.0f &&
+        relative_mouse_pos.y > 0 &&
         relative_mouse_pos.y < image_window_size.y) {
 
       // inside actual image
@@ -358,23 +370,31 @@ void UI::update_layout_image_window() {
           relative_mouse_pos.y < (top_left_of_image_relative_to_image_window.y +
                                   image_scaled_size.y)) {
         // finally calculate mouse position relative to image.
-        ImVec2 mouse_relative_to_image =
-            ImVec2((relative_mouse_pos.x -
-                    top_left_of_image_relative_to_image_window.x) /
-                       this->scale,
-                   (relative_mouse_pos.y -
-                    top_left_of_image_relative_to_image_window.y) /
-                       this->scale);
+        Vec2<std::int32_t> mouse_relative_to_image =
+            Vec2(static_cast<std::int32_t>(
+                     ((float)relative_mouse_pos.x -
+                      (float)top_left_of_image_relative_to_image_window.x) /
+                     this->scale),
+                 static_cast<std::int32_t>(
+                     ((float)relative_mouse_pos.y -
+                      (float)top_left_of_image_relative_to_image_window.y) /
+                     this->scale));
         nhlog_trace("UI: clicking inside image at x = %d, y = %d",
                     mouse_relative_to_image.x, mouse_relative_to_image.y);
 
         Color color =
             App::global_app_context->plugins_manager
                 .plugins[static_cast<size_t>(this->active_plugin_index)]
-                .callback.put_pixel(es, mouse_relative_to_image);
+                .callback.put_pixel(es, mouse_relative_to_image.to_imvec2());
 
-        App::global_app_context->editor.put_pixel(color,
-                                                  mouse_relative_to_image);
+        auto pixels_to_update = get_surrounding_pixels(
+            mouse_relative_to_image,
+            App::global_app_context->editor.editor_state.put_pixel_size,
+            App::global_app_context->editor.img);
+
+        for (auto pixel : pixels_to_update) {
+          App::global_app_context->editor.put_pixel(color, pixel.to_imvec2());
+        }
       }
     }
   }
@@ -428,7 +448,7 @@ void UI::update_layout_image_window() {
     }
   }
 
-  ImGui::SetCursorPos(top_left_of_image_relative_to_image_window);
+  ImGui::SetCursorPos(top_left_of_image_relative_to_image_window.to_imvec2());
   ImGui::Image((ImTextureID)(intptr_t)editor->texture.texture_id,
                ImVec2((float)editor->img.width * this->scale,
                       (float)editor->img.height * this->scale));
