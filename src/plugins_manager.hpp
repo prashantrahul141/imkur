@@ -1,17 +1,11 @@
 #pragma once
 
 #include "editor.hpp"
+#include "imgui.h"
 #include <cstdint>
 #include <vector>
 
-#define ICON_SIZE 32
-
-/*
- * Position
- */
-struct Vec2 {
-  uint32_t x, y;
-};
+#define PLUGIN_ICON_SIZE 32
 
 /*
  * Types a plugin can be.
@@ -35,13 +29,13 @@ struct PluginInfo {
   PluginType plugin_type;
 
   // 32x32 grayscale icon.
-  uint8_t icon[ICON_SIZE][ICON_SIZE] = {{0}};
+  uint8_t icon[PLUGIN_ICON_SIZE][PLUGIN_ICON_SIZE] = {{0}};
 };
 #define PLUGIN_INFO_FUNCTION_NAME "GET_PLUGIN_INFO"
-typedef PluginInfo *(*PLUGIN_INFO_FUNCTION_TYPE)();
+typedef PluginInfo *const (*PLUGIN_INFO_FUNCTION_TYPE)();
 
 #define PLUGIN_PUT_PIXEL_FUNCTION_NAME "PLUGIN_PUT_PIXEL"
-typedef Color (*PLUGIN_PUT_PIXEL_FUNCTION_TYPE)(EditorState, Vec2);
+typedef Color (*PLUGIN_PUT_PIXEL_FUNCTION_TYPE)(EditorState, ImVec2);
 
 #define PLUGIN_REPLACE_IMAGE_FUNCTION_NAME "PLUGIN_REPLACE_IMAGE"
 typedef void (*PLUGIN_REPLACE_IMAGE_FUNCTION_TYPE)(EditorState, Image);
@@ -56,6 +50,7 @@ struct Plugin {
     PLUGIN_PUT_PIXEL_FUNCTION_TYPE put_pixel;
     PLUGIN_REPLACE_IMAGE_FUNCTION_TYPE replace_image;
   } callback;
+  Texture icon;
 };
 
 #ifdef _WIN32
@@ -96,4 +91,9 @@ private:
    * verifies if the given plugin is valid or not
    */
   static bool is_plugin_valid(Plugin &plugin);
+
+  /*
+   * Loads icon for plugins
+   */
+  static bool load_plugin_icon(Plugin &plugin);
 };

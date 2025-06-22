@@ -2,6 +2,7 @@
 #include "nhlog.h"
 #include "src/config.hpp"
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 
 /*
@@ -10,7 +11,7 @@
 PluginManager::PluginManager() {
   if (!std::filesystem::exists(PATH_PLUGINS_DIR) ||
       !std::filesystem::is_directory(PATH_PLUGINS_DIR)) {
-    nhlog_fatal("No plugins directory found.");
+    nhlog_fatal("PluginManager: No plugins directory found.");
     std::abort();
   }
   const auto plugins = std::filesystem::directory_iterator(PATH_PLUGINS_DIR);
@@ -40,18 +41,22 @@ PluginManager::PluginManager() {
       continue;
     }
 
+    if (!PluginManager::load_plugin_icon(p)) {
+      continue;
+    }
+
     this->plugins.push_back(p);
   }
 }
 /*
  *  Destructor
  */
-
 PluginManager::~PluginManager() {
   nhlog_debug("PluginManager: destroying plugin manager");
   for (auto plugin : this->plugins) {
     nhlog_debug("PluginManager: unloading plugin = %s",
                 plugin.info_function()->name);
+    glDeleteTextures(1, &plugin.icon.texture_id);
     DL_CLOSE(plugin.handler);
   }
 }
@@ -102,5 +107,36 @@ bool PluginManager::is_plugin_valid(Plugin &plugin) {
   }
   }
 
+  return true;
+}
+
+/*
+ * Loads icon for plugins
+ */
+bool PluginManager::load_plugin_icon(Plugin &p) {
+  GLubyte data[PLUGIN_ICON_SIZE * PLUGIN_ICON_SIZE * 4];
+  for (int y = 0; y < PLUGIN_ICON_SIZE; ++y) {
+    for (int x = 0; x < PLUGIN_ICON_SIZE; ++x) {
+      int idx = (y * PLUGIN_ICON_SIZE + x) * 4;
+      auto color = p.info_function()->icon[y][x] ? COLOR_ICON : 0;
+      std::memcpy(&data[idx], &color, 4);
+    }
+  }
+
+  glGenTextures(1, &p.icon.texture_id);
+  glBindTexture(GL_TEXTURE_2D, p.icon.texture_id);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, PLUGIN_ICON_SIZE, PLUGIN_ICON_SIZE, 0,
+               GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+  GLenum err = glGetError();
+  if (err != 0) {
+    nhlog_fatal("PluginManager: Icon failed to upload to gpu");
+    return false;
+  }
   return true;
 }
