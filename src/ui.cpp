@@ -7,10 +7,13 @@
 #include "imgui_internal.h"
 #include "nfd.h"
 #include "src/app.hpp"
-#include "src/utils.hpp"
+#include "src/common.hpp"
+#include "src/editor.hpp"
+#include "src/plugins_manager.hpp"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <cfloat>
+#include <cstdint>
 #define NFD_NATIVE
 #include "nhlog.h"
 #include <cassert>
@@ -32,7 +35,8 @@ static void glfw_error_callback(int error, const char *description) {
 /*
  * constructor
  */
-UI::UI() noexcept : scale(1.0f), pan(ImVec2(0.0f, 0.0f)) {
+UI::UI() noexcept
+    : scale(1.0f), pan(ImVec2(0.0f, 0.0f)), active_plugin_index(-1) {
   nhlog_info("UI: ui init");
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) {
@@ -207,11 +211,35 @@ void UI::update_layout_menubar() {
 
 void UI::update_layout_sidebar() {
   ImGuiViewportP *viewport = (ImGuiViewportP *)(void *)ImGui::GetMainViewport();
+  PluginManager *plugins_manager = &App::global_app_context->plugins_manager;
   ImGui::BeginViewportSideBar(
-      "##TOOL_BAR", viewport, ImGuiDir_Left, UI_SIDEBAR_WIDTH,
+      "##SIDEBAR", viewport, ImGuiDir_Left, UI_SIDEBAR_WIDTH,
       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
           ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNavFocus);
-  // render tool icons here
+
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.f);
+  for (int32_t i = 0; i < plugins_manager->plugins.size(); i++) {
+    Plugin plugin = plugins_manager->plugins[static_cast<size_t>(i)];
+    if (i == this->active_plugin_index) {
+      ImGui::PushStyleColor(ImGuiCol_Button,
+                            ImVec4(COLOR_SECONDARY_BACKGROUND));
+
+      if (ImGui::ImageButton(plugin.info_function()->name,
+                             plugin.icon.texture_id,
+                             ImVec2(PLUGIN_ICON_SIZE, PLUGIN_ICON_SIZE))) {
+        this->active_plugin_index = i;
+      }
+
+      ImGui::PopStyleColor();
+    } else {
+      if (ImGui::ImageButton(plugin.info_function()->name,
+                             plugin.icon.texture_id,
+                             ImVec2(PLUGIN_ICON_SIZE, PLUGIN_ICON_SIZE))) {
+        this->active_plugin_index = i;
+      }
+    }
+  }
+  ImGui::PopStyleVar();
   ImGui::End();
 }
 
@@ -225,58 +253,58 @@ void UI::update_layout_bottombar() {
 
   ImGui::ColorButton(
       "Active Color",
-      ColorToImVec4(App::get_global_context()
-                        ->editor.editor_state.primary_selected_color));
+      ColorToImVec4(
+          App::global_app_context->editor.editor_state.primary_selected_color));
   ImGui::SameLine(60.0f);
   if (ImGui::ColorButton("White", ImVec4(UI_SWATCH_1))) {
-    App::get_global_context()->editor.editor_state.primary_selected_color =
+    App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_1));
   }
 
   ImGui::SameLine();
   if (ImGui::ColorButton("Black", ImVec4(UI_SWATCH_2))) {
-    App::get_global_context()->editor.editor_state.primary_selected_color =
+    App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_2));
   }
 
   ImGui::SameLine();
   if (ImGui::ColorButton("Red", ImVec4(UI_SWATCH_3))) {
-    App::get_global_context()->editor.editor_state.primary_selected_color =
+    App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_3));
   }
 
   ImGui::SameLine();
   if (ImGui::ColorButton("Green", ImVec4(UI_SWATCH_4))) {
-    App::get_global_context()->editor.editor_state.primary_selected_color =
+    App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_4));
   }
 
   ImGui::SameLine();
   if (ImGui::ColorButton("Blue", ImVec4(UI_SWATCH_5))) {
-    App::get_global_context()->editor.editor_state.primary_selected_color =
+    App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_5));
   }
 
   ImGui::SameLine();
   if (ImGui::ColorButton("Yellow", ImVec4(UI_SWATCH_6))) {
-    App::get_global_context()->editor.editor_state.primary_selected_color =
+    App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_6));
   }
   ImGui::SameLine();
   if (ImGui::ColorButton("Cyan", ImVec4(UI_SWATCH_7))) {
-    App::get_global_context()->editor.editor_state.primary_selected_color =
+    App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_7));
   }
   ImGui::SameLine();
   if (ImGui::ColorButton("Magenta", ImVec4(UI_SWATCH_8))) {
-    App::get_global_context()->editor.editor_state.primary_selected_color =
+    App::global_app_context->editor.editor_state.primary_selected_color =
         ImVec4ToColor(ImVec4(UI_SWATCH_8));
   }
   ImGui::End();
 }
 
 void UI::update_layout_image_window() {
-  Editor *editor = &App::get_global_context()->editor;
+  Editor *editor = &App::global_app_context->editor;
   ImGuiIO &io = ImGui::GetIO();
 
   ImGui::SetNextWindowPos(
@@ -289,10 +317,70 @@ void UI::update_layout_image_window() {
                ImGuiWindowFlags_NoNav | (ImGuiWindowFlags_NoDecoration |
                                          ImGuiWindowFlags_NoScrollWithMouse |
                                          ImGuiWindowFlags_NoSavedSettings));
-  bool isHovered = ImGui::IsWindowHovered();
+
+  ImVec2 image_scaled_size = ImVec2((float)editor->img.width * this->scale,
+                                    (float)editor->img.height * this->scale);
+
+  ImVec2 top_left_of_image_relative_to_image_window = ImVec2(
+      ((float)ImGui::GetWindowSize().x - image_scaled_size.x + this->pan.x) *
+          0.5f,
+      ((float)ImGui::GetWindowSize().y - image_scaled_size.y + this->pan.y) *
+          0.5f);
+
+  // clicked over the image.
+  if (ImGui::IsWindowHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+      -1 != this->active_plugin_index) {
+
+    EditorState es = App::global_app_context->editor.editor_state;
+    // calc mouse position relative to image.
+    ImVec2 absolute_mouse_pos = ImGui::GetMousePos();
+    ImVec2 window_pos = ImGui::GetWindowPos();
+    ImVec2 image_window_size = ImGui::GetWindowSize();
+    ImVec2 relative_mouse_pos = ImVec2(absolute_mouse_pos.x - window_pos.x,
+                                       absolute_mouse_pos.y - window_pos.y);
+
+    // make sure mouse position is inside the image window.
+    if (relative_mouse_pos.x > 0.0f &&
+        relative_mouse_pos.x < image_window_size.x &&
+        relative_mouse_pos.y > 0.0f &&
+        relative_mouse_pos.y < image_window_size.y) {
+
+      // inside actual image
+      if (
+          // within left bound
+          relative_mouse_pos.x > top_left_of_image_relative_to_image_window.x &&
+          // within right bound
+          relative_mouse_pos.x < (top_left_of_image_relative_to_image_window.x +
+                                  image_scaled_size.x) &&
+          // within top bound
+          relative_mouse_pos.y > top_left_of_image_relative_to_image_window.y &&
+          // within bottom bound
+          relative_mouse_pos.y < (top_left_of_image_relative_to_image_window.y +
+                                  image_scaled_size.y)) {
+        // finally calculate mouse position relative to image.
+        ImVec2 mouse_relative_to_image =
+            ImVec2((relative_mouse_pos.x -
+                    top_left_of_image_relative_to_image_window.x) /
+                       this->scale,
+                   (relative_mouse_pos.y -
+                    top_left_of_image_relative_to_image_window.y) /
+                       this->scale);
+        nhlog_trace("UI: clicking inside image at x = %d, y = %d",
+                    mouse_relative_to_image.x, mouse_relative_to_image.y);
+
+        Color color =
+            App::global_app_context->plugins_manager
+                .plugins[static_cast<size_t>(this->active_plugin_index)]
+                .callback.put_pixel(es, mouse_relative_to_image);
+
+        App::global_app_context->editor.put_pixel(color,
+                                                  mouse_relative_to_image);
+      }
+    }
+  }
 
   // hovered and scrolling
-  if (isHovered && 0.0f != io.MouseWheel) {
+  else if (ImGui::IsWindowHovered() && 0.0f != io.MouseWheel) {
 
     // with left ctrl key pressed: ZOOM
     if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
@@ -310,33 +398,37 @@ void UI::update_layout_image_window() {
       this->scale =
           std::clamp(this->scale, UI_IMAGE_MIN_SCALE, UI_IMAGE_MAX_SCALE);
 
+      // ALSO clamp x and y pan when zooming in or out, makes zooming in and out
+      // much smoother.
+      this->pan.x =
+          std::clamp(this->pan.x, -ImGui::GetWindowSize().x * this->scale,
+                     ImGui::GetWindowSize().x * this->scale);
+
+      this->pan.y =
+          std::clamp(this->pan.y, -ImGui::GetWindowSize().y * this->scale,
+                     ImGui::GetWindowSize().y * this->scale);
+
       // with left shift key pressed : HORIZONTAL SCROLL
     } else if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
       float move = (float)editor->img.width * UI_IMAGE_SCROLL_RATE;
       this->pan.x -= 0 < io.MouseWheel ? move : -move;
-      this->pan.x = std::clamp(this->pan.x, -ImGui::GetWindowSize().x,
-                               ImGui::GetWindowSize().x);
+      this->pan.x =
+          std::clamp(this->pan.x, -ImGui::GetWindowSize().x * this->scale,
+                     ImGui::GetWindowSize().x * this->scale);
       nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
 
       // no keys are pressed: VERTICAL SCROLL
     } else {
       float move = (float)editor->img.height * UI_IMAGE_SCROLL_RATE;
-      this->pan.y -= 0 < io.MouseWheel ? move : -move;
-      this->pan.y = std::clamp(this->pan.y, -ImGui::GetWindowSize().y,
-                               ImGui::GetWindowSize().y);
+      this->pan.y -= 0 < io.MouseWheel ? -move : move;
+      this->pan.y =
+          std::clamp(this->pan.y, -ImGui::GetWindowSize().y * this->scale,
+                     ImGui::GetWindowSize().y * this->scale);
       nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
     }
   }
 
-  ImVec2 scaled_size = ImVec2((float)editor->img.width * this->scale,
-                              (float)editor->img.height * this->scale);
-
-  ImVec2 pos = ImVec2(
-      ((float)ImGui::GetWindowSize().x - scaled_size.x + this->pan.x) * 0.5f,
-      ((float)ImGui::GetWindowSize().y - scaled_size.y + this->pan.y) * 0.5f);
-
-  ImGui::SetCursorPos(pos);
-
+  ImGui::SetCursorPos(top_left_of_image_relative_to_image_window);
   ImGui::Image((ImTextureID)(intptr_t)editor->texture.texture_id,
                ImVec2((float)editor->img.width * this->scale,
                       (float)editor->img.height * this->scale));
@@ -380,7 +472,7 @@ void UI::menu_callback_file_open() {
       NFD_OpenDialog(&out_path, open_dialog_filter_list, 1, NULL);
   if (NFD_OKAY == result) {
     nhlog_info("UI: selected file = %s", out_path);
-    App::get_global_context()->editor.load_image(out_path);
+    App::global_app_context->editor.load_image(out_path);
     NFD_FreePath(out_path);
   } else if (NFD_ERROR == result) {
     nhlog_error("UI: failed to open file dialog.");
@@ -396,7 +488,7 @@ void UI::menu_callback_save_open() {
       NFD_SaveDialog(&out_path, open_dialog_filter_list, 1, NULL, default_path);
   if (NFD_OKAY == result) {
     nhlog_info("UI: selected file = %s", out_path);
-    App::get_global_context()->editor.save_image(out_path);
+    App::global_app_context->editor.save_image(out_path);
     NFD_FreePath(out_path);
   } else if (NFD_ERROR == result) {
     nhlog_error("UI: failed to open file dialog.");
