@@ -2,7 +2,6 @@
 
 #include "glad/glad.h"
 #include "imgui.h"
-#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -18,6 +17,11 @@
 #elif defined(__GNUC__) && defined(__arm__) && !defined(__thumb__)
 #define BREAKPOINT() __asm__ volatile(".inst 0xe7f001f0")
 #else
+#if defined(__cplusplus)
+#include <cassert>
+#else
+#include <assert.h>
+#endif
 #define BREAKPOINT() assert(0)
 #endif
 #endif // #ifndef BREAKPOINT
