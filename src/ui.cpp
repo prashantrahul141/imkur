@@ -503,6 +503,10 @@ void UI::menu_callback_file_open() {
  * Called when menu item file -> save is called
  */
 void UI::menu_callback_save_open() {
+  if (nullptr == App::global_app_context->editor.img.data) {
+    nhlog_warn("UI: no image to save, skipping.");
+    return;
+  }
   nfdchar_t *out_path;
   nfdresult_t result =
       NFD_SaveDialog(&out_path, open_dialog_filter_list, 1, NULL, default_path);

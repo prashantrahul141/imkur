@@ -70,10 +70,6 @@ void Editor::unload_image() {
  */
 void Editor::save_image(const char *const path) {
   nhlog_debug("Editor: saving image");
-  if (nullptr == this->img.data) {
-    // app_notify(NOTIF_ERROR, "no image.");
-    return;
-  }
 
   if (!stbi_write_png(path, static_cast<int>(this->img.width),
                       static_cast<int>(this->img.height),
