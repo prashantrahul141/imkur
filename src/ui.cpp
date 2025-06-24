@@ -302,7 +302,7 @@ void UI::update_layout_bottombar() {
   }
 
   ImGui::SameLine();
-  ImGui::InputInt("#PUT_PIXEL_SIZE",
+  ImGui::InputInt("size",
                   &App::global_app_context->editor.editor_state.put_pixel_size);
 
   // clamp minimum to 1.
@@ -339,112 +339,117 @@ void UI::update_layout_image_window() {
                                  (float)image_scaled_size.y + this->pan.y) *
                                 0.5f));
 
-  // clicked over the image.
-  if (ImGui::IsWindowHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
-      -1 != this->active_plugin_index) {
+  // mouse above the image window.
+  if (ImGui::IsWindowHovered()) {
+    // clicked over the image.
+    if (ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+        -1 != this->active_plugin_index) {
 
-    EditorState es = App::global_app_context->editor.editor_state;
-    // calc mouse position relative to image.
-    Vec2 absolute_mouse_pos = Vec2<std::int32_t>(ImGui::GetMousePos());
-    Vec2 window_pos = Vec2<std::int32_t>(ImGui::GetWindowPos());
-    Vec2 image_window_size = Vec2<std::int32_t>(ImGui::GetWindowSize());
-    Vec2 relative_mouse_pos = Vec2(absolute_mouse_pos.x - window_pos.x,
-                                   absolute_mouse_pos.y - window_pos.y);
+      EditorState es = App::global_app_context->editor.editor_state;
+      // calc mouse position relative to image.
+      Vec2 absolute_mouse_pos = Vec2<std::int32_t>(ImGui::GetMousePos());
+      Vec2 window_pos = Vec2<std::int32_t>(ImGui::GetWindowPos());
+      Vec2 image_window_size = Vec2<std::int32_t>(ImGui::GetWindowSize());
+      Vec2 relative_mouse_pos = Vec2(absolute_mouse_pos.x - window_pos.x,
+                                     absolute_mouse_pos.y - window_pos.y);
 
-    // make sure mouse position is inside the image window.
-    if (relative_mouse_pos.x > 0 &&
-        relative_mouse_pos.x < image_window_size.x &&
-        relative_mouse_pos.y > 0 &&
-        relative_mouse_pos.y < image_window_size.y) {
+      // make sure mouse position is inside the image window.
+      if (relative_mouse_pos.x > 0 &&
+          relative_mouse_pos.x < image_window_size.x &&
+          relative_mouse_pos.y > 0 &&
+          relative_mouse_pos.y < image_window_size.y) {
 
-      // inside actual image
-      if (
-          // within left bound
-          relative_mouse_pos.x > top_left_of_image_relative_to_image_window.x &&
-          // within right bound
-          relative_mouse_pos.x < (top_left_of_image_relative_to_image_window.x +
-                                  image_scaled_size.x) &&
-          // within top bound
-          relative_mouse_pos.y > top_left_of_image_relative_to_image_window.y &&
-          // within bottom bound
-          relative_mouse_pos.y < (top_left_of_image_relative_to_image_window.y +
-                                  image_scaled_size.y)) {
-        // finally calculate mouse position relative to image.
-        Vec2<std::int32_t> mouse_relative_to_image =
-            Vec2(static_cast<std::int32_t>(
-                     ((float)relative_mouse_pos.x -
-                      (float)top_left_of_image_relative_to_image_window.x) /
-                     this->scale),
-                 static_cast<std::int32_t>(
-                     ((float)relative_mouse_pos.y -
-                      (float)top_left_of_image_relative_to_image_window.y) /
-                     this->scale));
-        nhlog_trace("UI: clicking inside image at x = %d, y = %d",
-                    mouse_relative_to_image.x, mouse_relative_to_image.y);
+        // inside actual image
+        if (
+            // within left bound
+            relative_mouse_pos.x >
+                top_left_of_image_relative_to_image_window.x &&
+            // within right bound
+            relative_mouse_pos.x <
+                (top_left_of_image_relative_to_image_window.x +
+                 image_scaled_size.x) &&
+            // within top bound
+            relative_mouse_pos.y >
+                top_left_of_image_relative_to_image_window.y &&
+            // within bottom bound
+            relative_mouse_pos.y <
+                (top_left_of_image_relative_to_image_window.y +
+                 image_scaled_size.y)) {
+          // finally calculate mouse position relative to image.
+          Vec2<std::int32_t> mouse_relative_to_image =
+              Vec2(static_cast<std::int32_t>(
+                       ((float)relative_mouse_pos.x -
+                        (float)top_left_of_image_relative_to_image_window.x) /
+                       this->scale),
+                   static_cast<std::int32_t>(
+                       ((float)relative_mouse_pos.y -
+                        (float)top_left_of_image_relative_to_image_window.y) /
+                       this->scale));
+          nhlog_trace("UI: clicking inside image at x = %d, y = %d",
+                      mouse_relative_to_image.x, mouse_relative_to_image.y);
 
-        Color color =
-            App::global_app_context->plugins_manager
-                .plugins[static_cast<size_t>(this->active_plugin_index)]
-                .callback.put_pixel(es, mouse_relative_to_image.to_imvec2());
+          Color color =
+              App::global_app_context->plugins_manager
+                  .plugins[static_cast<size_t>(this->active_plugin_index)]
+                  .callback.put_pixel(es, mouse_relative_to_image.to_imvec2());
 
-        auto pixels_to_update = get_surrounding_pixels(
-            mouse_relative_to_image,
-            App::global_app_context->editor.editor_state.put_pixel_size,
-            App::global_app_context->editor.img);
+          auto pixels_to_update = get_surrounding_pixels(
+              mouse_relative_to_image,
+              App::global_app_context->editor.editor_state.put_pixel_size,
+              App::global_app_context->editor.img);
 
-        for (auto pixel : pixels_to_update) {
-          App::global_app_context->editor.put_pixel(color, pixel.to_imvec2());
+          for (auto pixel : pixels_to_update) {
+            App::global_app_context->editor.put_pixel(color, pixel.to_imvec2());
+          }
         }
       }
     }
-  }
 
-  // hovered and scrolling
-  else if (ImGui::IsWindowHovered() && 0.0f != io.MouseWheel) {
+    // hovered and scrolling
+    else if (0.0f != io.MouseWheel) {
 
-    // with left ctrl key pressed: ZOOM
-    if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
-      float prev_scale = this->scale;
-      this->scale = 0 < io.MouseWheel ? this->scale * UI_IMAGE_ZOOM_RATE
-                                      : this->scale / UI_IMAGE_ZOOM_RATE;
-      nhlog_debug("UI: scale = %f", this->scale);
-      // stop zooming in or out when we reach 1.
-      if ((prev_scale < 1 && this->scale > 1) ||
-          (prev_scale > 1 && this->scale < 1)) {
-        this->scale = 1;
+      // with left ctrl key pressed: ZOOM
+      if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
+        float prev_scale = this->scale;
+        this->scale = 0 < io.MouseWheel ? this->scale * UI_IMAGE_ZOOM_RATE
+                                        : this->scale / UI_IMAGE_ZOOM_RATE;
+        nhlog_debug("UI: scale = %f", this->scale);
+        // stop zooming in or out when we reach 1.
+        if ((prev_scale < 1 && this->scale > 1) ||
+            (prev_scale > 1 && this->scale < 1)) {
+          this->scale = 1;
+        }
+
+        // clamp scale
+        this->scale =
+            std::clamp(this->scale, UI_IMAGE_MIN_SCALE, UI_IMAGE_MAX_SCALE);
+
+        // ALSO clamp x and y pan when zooming in or out, makes zooming in and
+        // out much smoother.
+        float limit_pan_x = ImGui::GetWindowSize().x * this->scale;
+        this->pan.x = std::clamp(this->pan.x, -limit_pan_x, limit_pan_x);
+
+        float limit_pan_y = ImGui::GetWindowSize().y * this->scale;
+        this->pan.y = std::clamp(this->pan.y, -limit_pan_y, limit_pan_y);
+
+        // with left shift key pressed : HORIZONTAL SCROLL
+      } else if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+        float move = (float)editor->img.width * UI_IMAGE_SCROLL_RATE;
+        this->pan.x -= 0 < io.MouseWheel ? move : -move;
+        this->pan.x =
+            std::clamp(this->pan.x, -ImGui::GetWindowSize().x * this->scale,
+                       ImGui::GetWindowSize().x * this->scale);
+        nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
+
+        // no keys are pressed: VERTICAL SCROLL
+      } else {
+        float move = (float)editor->img.height * UI_IMAGE_SCROLL_RATE;
+        this->pan.y -= 0 < io.MouseWheel ? -move : move;
+        this->pan.y =
+            std::clamp(this->pan.y, -ImGui::GetWindowSize().y * this->scale,
+                       ImGui::GetWindowSize().y * this->scale);
+        nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
       }
-
-      // clamp scale
-      this->scale =
-          std::clamp(this->scale, UI_IMAGE_MIN_SCALE, UI_IMAGE_MAX_SCALE);
-
-      // ALSO clamp x and y pan when zooming in or out, makes zooming in and out
-      // much smoother.
-      this->pan.x =
-          std::clamp(this->pan.x, -ImGui::GetWindowSize().x * this->scale,
-                     ImGui::GetWindowSize().x * this->scale);
-
-      this->pan.y =
-          std::clamp(this->pan.y, -ImGui::GetWindowSize().y * this->scale,
-                     ImGui::GetWindowSize().y * this->scale);
-
-      // with left shift key pressed : HORIZONTAL SCROLL
-    } else if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-      float move = (float)editor->img.width * UI_IMAGE_SCROLL_RATE;
-      this->pan.x -= 0 < io.MouseWheel ? move : -move;
-      this->pan.x =
-          std::clamp(this->pan.x, -ImGui::GetWindowSize().x * this->scale,
-                     ImGui::GetWindowSize().x * this->scale);
-      nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
-
-      // no keys are pressed: VERTICAL SCROLL
-    } else {
-      float move = (float)editor->img.height * UI_IMAGE_SCROLL_RATE;
-      this->pan.y -= 0 < io.MouseWheel ? -move : move;
-      this->pan.y =
-          std::clamp(this->pan.y, -ImGui::GetWindowSize().y * this->scale,
-                     ImGui::GetWindowSize().y * this->scale);
-      nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
     }
   }
 
