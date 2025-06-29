@@ -26,6 +26,8 @@ src_files = files(
   'src/ui.cpp',
   'src/editor.cpp',
   'src/app.cpp',
+  'src/plugins_manager.cpp',
+  'src/common.cpp',
 
   # nhlog
   'thirdparty/nhlog.cpp',
@@ -94,10 +96,10 @@ deps += glfw_dep
 executable('imkur', src_files, dependencies: deps, include_directories: includes, cpp_args : ['-Wconversion', '-Wsign-conversion'])
 
 # plugins
-# message('building plugins')
+message('building plugins')
 
-# plugins_out_dir = join_paths(meson.project_build_root(), 'plugins')
-# shared_module('put_pixel_pencil', 'plugins/put_pixel_pencil.c', native: true)
+plugins_out_dir = join_paths(meson.project_build_root(), 'plugins')
+shared_module('pencil', 'plugins/pencil.cpp', native: true)
 
 # tools
 # message('building tools')
