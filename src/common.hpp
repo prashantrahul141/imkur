@@ -2,6 +2,7 @@
 
 #include "glad/glad.h"
 #include "imgui.h"
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -61,7 +62,17 @@ public:
   Vec2<T> operator/(const Vec2<T> &other) {
     return Vec2(this->x / other.x, this->y / other.y);
   }
+  const float dist() {
+    return std::sqrt(this->x * this->x + this->y * this->y);
+  }
+  Vec2<T> operator*(T val) {
+    return Vec2<T>((T)this->x * val, (T)this->y * val);
+  }
 
+  static Vec2<T> lerp(Vec2<T> &a, Vec2<T> &b, float t) {
+    return {a.x + static_cast<T>((b.x - a.x) * t),
+            a.y + static_cast<T>((b.y - a.y) * t)};
+  }
   ImVec2 to_imvec2() { return ImVec2((float)this->x, (float)this->y); }
 };
 
