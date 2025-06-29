@@ -1,7 +1,7 @@
 #pragma once
 
 // NHLOG_OFF
-#define APPLICATION_DEBUG_LEVEL NHLOG_DEBUG
+#define APPLICATION_DEBUG_LEVEL NHLOG_ERROR
 
 // UI
 #define UI_TARGET_FPS 10
@@ -51,3 +51,8 @@
 #define COLOR_ICON                                                             \
   (_COLOR_ICON_R << 24) + (_COLOR_ICON_G << 16) + (_COLOR_ICON_B << 8) +       \
       _COLOR_ICON_A
+
+// Editor
+#define EDITOR_LERP_STEP_SPACING_PERCENT                                       \
+  95.0 // higher value = better performance but worse results
+#define EDITOR_PUT_PIXEL_DELAY_MS 50
