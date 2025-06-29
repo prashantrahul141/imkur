@@ -30,7 +30,8 @@ PluginManager::PluginManager() {
     Plugin p = Plugin();
     p.handler = DL_OPEN(abs_path.c_str());
     if (nullptr == p.handler) {
-      nhlog_error("PluginManager: plugin handler is null");
+      nhlog_error("PluginManager: plugin handler is null for %s",
+                  abs_path.c_str());
       continue;
     }
 
