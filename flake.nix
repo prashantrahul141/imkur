@@ -47,7 +47,6 @@
                     if stdenv.isLinux then
                       [
                         gdb
-                        wayland-scanner
                       ]
                     else
                       [ ]
@@ -62,8 +61,20 @@
                   xorg.libXinerama
                   xorg.libXrandr
                   glfw
-                  glew
+                  dbus
                 ];
+
+                LD_LIBRARY_PATH =
+                  with pkgs;
+                  lib.makeLibraryPath [
+                    libGL
+                    xorg.libXrandr
+                    xorg.libXinerama
+                    xorg.libXcursor
+                    xorg.libXi
+                    dbus.dev
+                  ];
+                LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
 
                 shellHook = '''';
               };
