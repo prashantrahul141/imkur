@@ -45,6 +45,11 @@ public:
   void save_image(const char *const path);
 
   /*
+   * Draws a cirlce around the given point according to internal size paramter.
+   */
+  void draw_cirlce(Vec2<std::int32_t> center, Color color);
+
+  /*
    * Get color at a specific location.
    */
   Color get_pixel(std::int32_t x, std::int32_t y);

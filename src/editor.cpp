@@ -111,6 +111,19 @@ Color Editor::get_pixel(std::int32_t x, std::int32_t y) {
 }
 
 /*
+ * Draws a cirlce around the given point according to internal size paramter.
+ */
+void Editor::draw_cirlce(Vec2<std::int32_t> center, Color color) {
+  nhlog_debug("called at center = %d, %d", center.x, center.y);
+  auto pixels_to_update = get_surrounding_pixels(
+      center, this->editor_state.put_pixel_size, this->img);
+
+  for (auto pixel : pixels_to_update) {
+    this->put_pixel(color, pixel.to_imvec2());
+  }
+}
+
+/*
  * Puts color at a specific location.
  */
 void Editor::put_pixel(Color color, ImVec2 pos) {
