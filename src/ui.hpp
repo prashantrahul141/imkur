@@ -2,7 +2,9 @@
 
 #include "glad/glad.h"
 #include "imgui.h"
+#include "src/common.hpp"
 #include <GLFW/glfw3.h>
+#include <chrono>
 #include <cstdint>
 #include <expected>
 #include <memory>
@@ -37,8 +39,10 @@ public:
 
 private:
   float scale;
-  ImVec2 pan;
+  Vec2<float> pan;
   int32_t active_plugin_index;
+  Vec2<std::int32_t> last_pos_put_pixel;
+  std::chrono::milliseconds last_put_pixel_time;
 
 public:
   /*

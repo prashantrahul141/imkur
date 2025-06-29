@@ -13,7 +13,9 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <cfloat>
+#include <chrono>
 #include <cstdint>
+#include <cstdio>
 #define NFD_NATIVE
 #include "nhlog.h"
 #include <cassert>
@@ -36,7 +38,8 @@ static void glfw_error_callback(int error, const char *description) {
  * constructor
  */
 UI::UI() noexcept
-    : scale(1.0f), pan(ImVec2(0.0f, 0.0f)), active_plugin_index(-1) {
+    : scale(1.0f), pan(ImVec2(0.0f, 0.0f)), active_plugin_index(-1),
+      last_pos_put_pixel(Vec2(-1, -1)), last_put_pixel_time(0) {
   nhlog_info("UI: ui init");
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) {
@@ -339,11 +342,23 @@ void UI::update_layout_image_window() {
                                  (float)image_scaled_size.y + this->pan.y) *
                                 0.5f));
 
+  std::chrono::milliseconds now = duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch());
+
   // mouse above the image window.
   if (ImGui::IsWindowHovered()) {
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+      this->last_pos_put_pixel.x = this->last_pos_put_pixel.y = -1;
+    }
+
     // clicked over the image.
     if (ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
-        -1 != this->active_plugin_index) {
+        -1 != this->active_plugin_index &&
+        // we only draw if it have been more than EDITOR_PUT_PIXEL_DELAY_MS
+        (now - this->last_put_pixel_time).count() > EDITOR_PUT_PIXEL_DELAY_MS) {
+
+      nhlog_debug("drawing over image");
+      this->last_put_pixel_time = now;
 
       EditorState es = App::global_app_context->editor.editor_state;
       // calc mouse position relative to image.
@@ -375,6 +390,7 @@ void UI::update_layout_image_window() {
             relative_mouse_pos.y <
                 (top_left_of_image_relative_to_image_window.y +
                  image_scaled_size.y)) {
+
           // finally calculate mouse position relative to image.
           Vec2<std::int32_t> mouse_relative_to_image =
               Vec2(static_cast<std::int32_t>(
@@ -393,21 +409,40 @@ void UI::update_layout_image_window() {
                   .plugins[static_cast<size_t>(this->active_plugin_index)]
                   .callback.put_pixel(es, mouse_relative_to_image.to_imvec2());
 
-          auto pixels_to_update = get_surrounding_pixels(
-              mouse_relative_to_image,
-              App::global_app_context->editor.editor_state.put_pixel_size,
-              App::global_app_context->editor.img);
-
-          for (auto pixel : pixels_to_update) {
-            App::global_app_context->editor.put_pixel(color, pixel.to_imvec2());
+          // if last frame mouse wasnt clicking on the image.
+          if (this->last_pos_put_pixel.x < 0 ||
+              this->last_pos_put_pixel.y < 0) {
+            this->last_pos_put_pixel = mouse_relative_to_image;
+            App::global_app_context->editor.draw_cirlce(mouse_relative_to_image,
+                                                        color);
           }
+          // but if last frame mouse was clicking on the image we lerp through
+          // these two mouse positions
+          else {
+            Vec2<std::int32_t> diff =
+                mouse_relative_to_image - this->last_pos_put_pixel;
+            auto step_spacing =
+                (EDITOR_LERP_STEP_SPACING_PERCENT / 100) *
+                App::global_app_context->editor.editor_state.put_pixel_size;
+            std::int32_t steps = static_cast<int>(diff.dist() / step_spacing);
+
+            // lerp through each step
+            for (std::int32_t i = 0; i <= steps; i++) {
+              float t = static_cast<float>(i) / static_cast<float>(steps);
+              Vec2<std::int32_t> pos = Vec2<std::int32_t>::lerp(
+                  this->last_pos_put_pixel, mouse_relative_to_image, t);
+
+              App::global_app_context->editor.draw_cirlce(pos, color);
+            }
+          }
+
+          this->last_pos_put_pixel = mouse_relative_to_image;
         }
       }
     }
 
     // hovered and scrolling
     else if (0.0f != io.MouseWheel) {
-
       // with left ctrl key pressed: ZOOM
       if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
         float prev_scale = this->scale;
@@ -451,8 +486,9 @@ void UI::update_layout_image_window() {
         nhlog_debug("UI: pan = %f, %f", this->pan.x, this->pan.y);
       }
     }
+  } else {
+    this->last_pos_put_pixel.x = this->last_pos_put_pixel.y = -1;
   }
-
   ImGui::SetCursorPos(top_left_of_image_relative_to_image_window.to_imvec2());
   ImGui::Image((ImTextureID)(intptr_t)editor->texture.texture_id,
                ImVec2((float)editor->img.width * this->scale,
