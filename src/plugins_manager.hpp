@@ -3,6 +3,7 @@
 #include "editor.hpp"
 #include "imgui.h"
 #include <cstdint>
+#include <filesystem>
 #include <vector>
 
 #define PLUGIN_ICON_SIZE 32
@@ -87,6 +88,11 @@ public:
   ~PluginManager();
 
 private:
+  /*
+   * Iterator for all plugin files.
+   */
+  static std::vector<std::filesystem::directory_entry> get_plugin_files();
+
   /*
    * verifies if the given plugin is valid or not
    */

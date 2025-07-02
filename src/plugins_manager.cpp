@@ -1,6 +1,7 @@
 #include "src/plugins_manager.hpp"
 #include "nhlog.h"
 #include "src/config.hpp"
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -9,13 +10,7 @@
  * Constructor
  */
 PluginManager::PluginManager() {
-  if (!std::filesystem::exists(PATH_PLUGINS_DIR) ||
-      !std::filesystem::is_directory(PATH_PLUGINS_DIR)) {
-    nhlog_fatal("PluginManager: No plugins directory found.");
-    std::abort();
-  }
-  const auto plugins = std::filesystem::directory_iterator(PATH_PLUGINS_DIR);
-  for (const auto &plugin_path : plugins) {
+  for (const auto &plugin_path : get_plugin_files()) {
     nhlog_debug("PluginManager: loading = %s", plugin_path.path().c_str());
 
     if (!plugin_path.is_regular_file()) {
@@ -140,4 +135,42 @@ bool PluginManager::load_plugin_icon(Plugin &p) {
     return false;
   }
   return true;
+}
+
+/*
+ * Iterator for all plugin files.
+ */
+std::vector<std::filesystem::directory_entry>
+PluginManager::get_plugin_files() {
+  std::vector<std::filesystem::directory_entry> files;
+  for (const auto &plugin_path : std::filesystem::directory_iterator(".")) {
+    files.push_back(plugin_path);
+  }
+
+  if (std::filesystem::exists(PATH_PLUGINS_DIR) &&
+      std::filesystem::is_directory(PATH_PLUGINS_DIR)) {
+    for (const auto &plugin_path :
+         std::filesystem::directory_iterator(PATH_PLUGINS_DIR)) {
+      files.push_back(plugin_path);
+    }
+  } else {
+    nhlog_error("PluginManager: No plugins directory found.");
+  }
+
+  files.erase(std::remove_if(files.begin(), files.end(),
+                             [](std::filesystem::directory_entry entry) {
+                               return !(entry.exists() &&
+                                        entry.is_regular_file() &&
+                                        entry.path().has_extension() &&
+                                        (entry.path().extension() == ".so" ||
+                                         entry.path().extension() == ".dylib" ||
+                                         entry.path().extension() == ".dll"));
+                             }),
+              files.end());
+
+  nhlog_debug("Plugin files: ");
+  for (const auto &file : files) {
+    nhlog_debug("\t%s", file.path().c_str());
+  }
+  return files;
 }
