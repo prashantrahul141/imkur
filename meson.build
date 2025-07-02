@@ -1,6 +1,7 @@
 project('imkur', ['cpp', 'c'], default_options : ['cpp_std=c++23', 'default_library=static'], license: 'Apache-2.0', license_files: ['LICENSE'], version: '0.1')
 
 cmake = import('cmake')
+fs = import('fs')
 cxxc = meson.get_compiler('cpp')
 
 warning_level = 'everything'
@@ -99,7 +100,14 @@ executable('imkur', src_files, dependencies: deps, include_directories: includes
 message('building plugins')
 
 plugins_out_dir = join_paths(meson.project_build_root(), 'plugins')
-shared_module('pencil', 'plugins/pencil.cpp', native: true)
+
+plugin_src = files(
+  'plugins/pencil.cpp'
+)
+foreach plugin_file: plugin_src
+  plugin_target = shared_module(fs.stem(plugin_file), plugin_file, native: true)
+endforeach
+
 
 # tools
 # message('building tools')
