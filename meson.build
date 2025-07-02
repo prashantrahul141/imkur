@@ -80,7 +80,7 @@ elif build_machine.system() == 'windows'
 
 # mac only
 else
-  deps += dependency('dl')
+  deps += dependency('dl', required: true)
 
 endif
 
