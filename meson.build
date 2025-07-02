@@ -10,6 +10,7 @@ werror = true
 b_pch = true
 
 if get_option('buildtype') == 'debug'
+  add_project_arguments('-DDEBUG_BUILD', language: ['c', 'cpp'])
   strip = false
   optimization = 'plain'
   b_lto = false
