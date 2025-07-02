@@ -121,6 +121,8 @@ void Editor::draw_cirlce(Vec2<std::int32_t> center, Color color) {
   for (auto pixel : pixels_to_update) {
     this->put_pixel(color, pixel.to_imvec2());
   }
+
+  this->regen_texture();
 }
 
 /*
@@ -138,7 +140,5 @@ void Editor::put_pixel(Color color, ImVec2 pos) {
   this->img.data[index] = color.r;
   this->img.data[index + 1] = color.g;
   this->img.data[index + 2] = color.b;
-  //  this->img.data[index + 3] = color.a;
-
-  this->regen_texture();
+  // this->img.data[index + 3] = color.a;
 }
