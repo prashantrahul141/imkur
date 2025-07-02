@@ -83,6 +83,7 @@ elif build_machine.system() == 'windows'
 
 else  # macOS
   deps += dependency('dl', required: true)
+  deps += dependency('appleframeworks', modules: ['IOKit', 'CoreFoundation'])
 
   # Add IOKit and CoreFoundation for GLFW
   iokit_dep = dependency('appleframeworks', modules: ['IOKit', 'CoreFoundation'])
