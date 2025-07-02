@@ -83,6 +83,7 @@ elif build_machine.system() == 'windows'
 # mac only
 else
   deps += dependency('dl', required: true)
+  deps += dependency('appleframeworks', modules: ['IOKit', 'CoreFoundation'])
 
 endif
 
