@@ -1,7 +1,7 @@
 #pragma once
 
 // NHLOG_OFF
-#define APPLICATION_DEBUG_LEVEL NHLOG_ERROR
+#define APPLICATION_DEBUG_LEVEL NHLOG_DEBUG
 
 // UI
 #define UI_TARGET_FPS 10
@@ -36,7 +36,7 @@
 #endif
 #define PATH_RESOURCES_DIR "../resources"
 #define PATH_FONT_FILE PATH_RESOURCES_DIR PATH_SEPERATOR "Cousine-Regular.ttf"
-#define PATH_PLUGINS_DIR "../plugins"
+#define PATH_PLUGINS_DIR "./plugins"
 
 // Colors
 #define COLOR_PRIMARY_BACKGROUND                                               \
