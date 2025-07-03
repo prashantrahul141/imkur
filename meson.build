@@ -52,6 +52,7 @@ src_files = files(
 deps = []
 includes = []
 
+includes += include_directories('./plugins')
 includes += include_directories('./thirdparty')
 includes += include_directories('./thirdparty/imgui')
 includes += include_directories('./thirdparty/imgui/backends')
