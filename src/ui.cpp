@@ -174,10 +174,11 @@ bool UI::update_state() {
  */
 void UI::update_layout() {
   nhlog_trace("UI: update layout");
-  update_layout_menubar();
-  update_layout_sidebar();
-  update_layout_bottombar();
-  update_layout_image_window();
+  this->update_layout_menubar();
+  this->update_layout_sidebar();
+  this->update_layout_rightbar();
+  this->update_layout_bottombar();
+  this->update_layout_image_window();
 }
 
 /*
@@ -326,6 +327,27 @@ void UI::update_layout_bottombar() {
   // clamp minimum to 1.
   App::global_app_context->editor.editor_state.put_pixel_size =
       std::max(1, App::global_app_context->editor.editor_state.put_pixel_size);
+
+  ImGui::End();
+}
+
+void UI::update_layout_rightbar() {
+  // Editor *editor = &App::global_app_context->editor;
+
+  ImGuiViewportP *viewport = (ImGuiViewportP *)(void *)ImGui::GetMainViewport();
+  PluginManager *plugins_manager = &App::global_app_context->plugins_manager;
+
+  ImGui::BeginViewportSideBar(
+      "##RIGHT_BAR", viewport, ImGuiDir_Right, UI_RIGHTBAR_WIDTH,
+      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
+          ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNavFocus);
+
+  for (size_t i = 0; i < plugins_manager->plugins.size(); i++) {
+    if (PLUGIN_TYPE_REPLACE_IMAGE !=
+        plugins_manager->plugins[i].info_function()->plugin_type) {
+      continue;
+    }
+  }
 
   ImGui::End();
 }
