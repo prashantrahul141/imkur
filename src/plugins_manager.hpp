@@ -1,37 +1,13 @@
 #pragma once
 
-#include "editor.hpp"
+#include "common.hpp"
 #include "imgui.h"
-#include <cstdint>
+#include "plugins/plugin_base.hpp"
 #include <filesystem>
 #include <vector>
 
 #define PLUGIN_ICON_SIZE 32
 
-/*
- * Types a plugin can be.
- */
-enum class PluginType {
-  PLUGIN_TYPE_PUT_PIXEL = 0,
-  PLUGIN_TYPE_REPLACE_IMAGE,
-};
-
-/*
- * This struct contains the info regarding a single plugin.
- */
-struct PluginInfo {
-  // Name of the plugin. This will show up in the editor.
-  char const *name;
-
-  // Short description of what the plugin does. This will show up in the editor.
-  char const *description;
-
-  // Plugin type
-  PluginType plugin_type;
-
-  // 32x32 grayscale icon.
-  uint8_t icon[PLUGIN_ICON_SIZE][PLUGIN_ICON_SIZE] = {{0}};
-};
 #define PLUGIN_INFO_FUNCTION_NAME "GET_PLUGIN_INFO"
 typedef PluginInfo *const (*PLUGIN_INFO_FUNCTION_TYPE)();
 

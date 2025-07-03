@@ -3,13 +3,6 @@
 #include "glad/glad.h"
 #include <cstdint>
 
-struct EditorState {
-  Color primary_selected_color;
-  uint8_t opacity;
-  // radius of put pixel tool pointer.
-  int32_t put_pixel_size;
-};
-
 class Editor {
 public:
   Image img;

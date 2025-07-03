@@ -2,8 +2,8 @@
 
 #include "glad/glad.h"
 #include "imgui.h"
+#include "plugin_base.hpp"
 #include <cmath>
-#include <cstdint>
 #include <vector>
 
 #ifndef BREAKPOINT
@@ -29,16 +29,6 @@
 
 struct Texture {
   GLuint texture_id;
-};
-
-struct Color {
-  uint8_t r, g, b, a;
-};
-
-struct Image {
-  std::uint8_t *data;
-  std::int32_t width, height, channels;
-  const std::int32_t components_per_pixel = 4;
 };
 
 ImVec4 ColorToImVec4(Color c);
