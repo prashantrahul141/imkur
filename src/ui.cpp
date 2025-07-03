@@ -6,6 +6,7 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_internal.h"
 #include "nfd.h"
+#include "plugin_base.hpp"
 #include "src/app.hpp"
 #include "src/common.hpp"
 #include "src/editor.hpp"
@@ -223,6 +224,10 @@ void UI::update_layout_sidebar() {
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.f);
   for (int32_t i = 0; i < plugins_manager->plugins.size(); i++) {
     Plugin plugin = plugins_manager->plugins[static_cast<size_t>(i)];
+    if (PLUGIN_TYPE_PUT_PIXEL != plugin.info_function()->plugin_type) {
+      continue;
+    }
+
     if (i == this->active_plugin_index) {
       ImGui::PushStyleColor(ImGuiCol_Button,
                             ImVec4(COLOR_SECONDARY_BACKGROUND));
@@ -240,6 +245,14 @@ void UI::update_layout_sidebar() {
                              ImVec2(PLUGIN_ICON_SIZE, PLUGIN_ICON_SIZE))) {
         this->active_plugin_index = i;
       }
+    }
+
+    if (ImGui::BeginItemTooltip()) {
+      ImGui::Text("%s", plugin.info_function()->name);
+      ImGui::PushFontSize(ImGui::GetFontSize() * 0.8f);
+      ImGui::Text("%s", plugin.info_function()->description);
+      ImGui::PopFontSize();
+      ImGui::EndTooltip();
     }
   }
   ImGui::PopStyleVar();
@@ -304,9 +317,11 @@ void UI::update_layout_bottombar() {
         ImVec4ToColor(ImVec4(UI_SWATCH_8));
   }
 
-  ImGui::SameLine();
+  ImGui::SameLine(350.0f);
+  ImGui::SetNextItemWidth(60.0f);
   ImGui::InputInt("size",
-                  &App::global_app_context->editor.editor_state.put_pixel_size);
+                  &App::global_app_context->editor.editor_state.put_pixel_size,
+                  0, 0, 0);
 
   // clamp minimum to 1.
   App::global_app_context->editor.editor_state.put_pixel_size =
@@ -320,10 +335,12 @@ void UI::update_layout_image_window() {
   ImGuiIO &io = ImGui::GetIO();
 
   ImGui::SetNextWindowPos(
-      ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.49f),
+      ImVec2(io.DisplaySize.x * 0.502f - (UI_RIGHTBAR_WIDTH / 3),
+             io.DisplaySize.y * 0.483f),
       ImGuiCond_Always, ImVec2(0.5f, 0.5f));
   ImGui::SetNextWindowSize(
-      ImVec2(io.DisplaySize.x - 130.0f, io.DisplaySize.y - 140.0f));
+      ImVec2(io.DisplaySize.x - (UI_SIDEBAR_WIDTH + UI_RIGHTBAR_WIDTH) - 20.0f,
+             io.DisplaySize.y - (UI_BOTTOMBAR_HEIGHT)-50.0f));
 
   ImGui::Begin("##IMAGE_WINDOW", NULL,
                ImGuiWindowFlags_NoNav | (ImGuiWindowFlags_NoDecoration |
