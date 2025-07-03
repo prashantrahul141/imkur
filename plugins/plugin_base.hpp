@@ -3,6 +3,8 @@
  * It can be imported for declarations which will be used throughout the plugin.
  */
 
+#pragma once
+
 #include <cstdint>
 
 #define ICON_SIZE 32
@@ -23,7 +25,7 @@ struct Color {
 /*
  * Position
  */
-struct Vec2 {
+struct ZUVec2 {
   uint32_t x, y;
 };
 
@@ -42,12 +44,13 @@ struct Image {
 struct EditorState {
   Color primary_selected_color;
   uint8_t opacity;
+  int32_t put_pixel_size;
 };
 
 /*
  * Types a plugin can be.
  */
-enum class PluginType {
+enum PluginType {
   // This is a type of plugin which works on per pixel basis.
   // Like a pencil. You will need to define a function
   // named `PLUGIN_PUT_PIXEL` if the type is set to this.
@@ -57,6 +60,39 @@ enum class PluginType {
   // Like a blur filter. You will need to define a function named
   // `PLUGIN_REPLACE_IMAGE` if the type if set to this.
   PLUGIN_TYPE_REPLACE_IMAGE,
+};
+
+/*
+ * Types a meta variable can be off.
+ */
+enum VariableMetaType {
+  TYPE_FLOAT,
+  TYPE_BOOL,
+};
+
+/*
+ * Range value for variables of type TYPE_FLOAT.
+ */
+struct FloatRange {
+  float min;
+  float max;
+};
+
+/*
+ * Variable meta data for ONE variable.
+ * This will be used to expose variable to the editor.
+ */
+struct VariableMeta {
+  char const *name;
+  VariableMetaType type;
+  // default value will depend on type of the value.
+  union {
+    bool default_boolean;
+    float default_float;
+  } default_value;
+
+  // only exists for the variable type of TYPE_FLOAT
+  FloatRange float_range;
 };
 
 /*
@@ -71,6 +107,11 @@ struct PluginInfo {
 
   // Plugin type
   PluginType plugin_type;
+
+  // this required ONLY for plugin_type::PLUGIN_TYPE_REPLACE_IMAGE
+  // exposes a array of meta data is requires AND wants to render on the ui.
+  VariableMeta *vars;
+  uint8_t vars_len = 0;
 
   // 32x32 grayscale icon.
   uint8_t icon[ICON_SIZE][ICON_SIZE] = {{0}};
@@ -89,7 +130,7 @@ struct PluginInfo {
  *  whenever the plugin is used over the image.
  *  The color returned from this will override the pixel color.
  *
- * extern "C" EXPORT Color PLUGIN_PUT_PIXEL(EditorState es, Vec2 pos);
+ * extern "C" EXPORT Color PLUGIN_PUT_PIXEL(EditorState es, ZUVec2 pos);
  */
 
 /*
