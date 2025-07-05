@@ -64,7 +64,11 @@ m_dep = cxxc.find_library('m', required: true)
 deps += m_dep
 
 # opengl
-opengl_dep = dependency('opengl', required: true)
+opengl_dep = dependency('opengl', required: true, default_options : [
+  'c_args=-w',
+  'cpp_args=-w'
+])
+
 deps += opengl_dep
 
 glfw_opt_vars = cmake.subproject_options()
