@@ -67,6 +67,7 @@ enum PluginType {
  */
 enum VariableMetaType {
   TYPE_FLOAT,
+  TYPE_INT,
   TYPE_BOOL,
 };
 
@@ -76,6 +77,7 @@ enum VariableMetaType {
 struct FloatRange {
   float min;
   float max;
+  float step;
 };
 
 /*
@@ -84,15 +86,17 @@ struct FloatRange {
  */
 struct VariableMeta {
   char const *name;
+  char const *description;
   VariableMetaType type;
   // default value will depend on type of the value.
   union {
-    bool default_boolean;
+    bool default_bool;
     float default_float;
+    int32_t default_int;
   } default_value;
 
   // only exists for the variable type of TYPE_FLOAT
-  FloatRange float_range;
+  FloatRange range;
 };
 
 /*
@@ -137,5 +141,6 @@ struct PluginInfo {
  * if the type of the plugin is `PLUGIN_REPLACE_IMAGE`, this function will be
  * called to replace the image inplace.
  *
- * extern "C" EXPORT void PLUGIN_REPLACE_IMAGE(EditorState es, Image img);
+ * extern "C" EXPORT void PLUGIN_REPLACE_IMAGE(EditorState es, Image img, void*
+ * data);
  */
