@@ -15,7 +15,8 @@ typedef PluginInfo *const (*PLUGIN_INFO_FUNCTION_TYPE)();
 typedef Color (*PLUGIN_PUT_PIXEL_FUNCTION_TYPE)(EditorState, ImVec2);
 
 #define PLUGIN_REPLACE_IMAGE_FUNCTION_NAME "PLUGIN_REPLACE_IMAGE"
-typedef void (*PLUGIN_REPLACE_IMAGE_FUNCTION_TYPE)(EditorState, Image);
+typedef void (*PLUGIN_REPLACE_IMAGE_FUNCTION_TYPE)(EditorState, Image,
+                                                   void *data);
 
 /*
  * Single loaded plugin
@@ -28,6 +29,7 @@ struct Plugin {
     PLUGIN_REPLACE_IMAGE_FUNCTION_TYPE replace_image;
   } callback;
   Texture icon;
+  void *replace_image_data = nullptr;
 };
 
 #ifdef _WIN32
@@ -78,4 +80,9 @@ private:
    * Loads icon for plugins
    */
   static bool load_plugin_icon(Plugin &plugin);
+
+  /*
+   * Calculate size of all vars.
+   */
+  static size_t calc_vars_size(Plugin &plugin);
 };

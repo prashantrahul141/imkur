@@ -1,7 +1,9 @@
 #include "src/plugins_manager.hpp"
 #include "nhlog.h"
+#include "plugin_base.hpp"
 #include "src/config.hpp"
 #include <algorithm>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -53,6 +55,10 @@ PluginManager::~PluginManager() {
     nhlog_debug("PluginManager: unloading plugin = %s",
                 plugin.info_function()->name);
     glDeleteTextures(1, &plugin.icon.texture_id);
+    if (PLUGIN_TYPE_REPLACE_IMAGE == plugin.info_function()->plugin_type &&
+        nullptr != plugin.replace_image_data) {
+      free(plugin.replace_image_data);
+    }
     DL_CLOSE(plugin.handler);
   }
 }
@@ -75,6 +81,7 @@ bool PluginManager::is_plugin_valid(Plugin &plugin) {
   }
   nhlog_debug("PluginManager: plugin name = %s", info->name);
 
+  plugin.replace_image_data = nullptr;
   switch (info->plugin_type) {
   case PluginType::PLUGIN_TYPE_PUT_PIXEL: {
     plugin.callback.put_pixel = (PLUGIN_PUT_PIXEL_FUNCTION_TYPE)DL_SYMBOL(
@@ -95,6 +102,8 @@ bool PluginManager::is_plugin_valid(Plugin &plugin) {
       nhlog_error("PluginManager: replace_image function was null.");
       return false;
     }
+    // allocate memmory for meta vars
+    plugin.replace_image_data = malloc(PluginManager::calc_vars_size(plugin));
     break;
   }
   default: {
@@ -173,4 +182,35 @@ PluginManager::get_plugin_files() {
     nhlog_debug("\t%s", file.path().c_str());
   }
   return files;
+}
+
+/*
+ * Calculate size of all vars.
+ */
+size_t PluginManager::calc_vars_size(Plugin &plugin) {
+  auto info = plugin.info_function();
+  size_t size = 0;
+  if (PLUGIN_TYPE_REPLACE_IMAGE != info->plugin_type) {
+    return size;
+  }
+
+  for (size_t i = 0; i < info->vars_len; i++) {
+    auto var = info->vars[i];
+    switch (var.type) {
+    case TYPE_FLOAT:
+      size += sizeof(float);
+      break;
+    case TYPE_INT:
+      size += sizeof(int32_t);
+      break;
+    case TYPE_BOOL:
+      size += sizeof(bool);
+      break;
+    default:
+      nhlog_fatal("Plugin's var type is invalid for = %s", info->name);
+      std::abort();
+    }
+  }
+
+  return size;
 }
