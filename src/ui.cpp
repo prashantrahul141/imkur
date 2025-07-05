@@ -409,7 +409,7 @@ void UI::update_layout_image_window() {
   ImGuiIO &io = ImGui::GetIO();
 
   ImGui::SetNextWindowPos(
-      ImVec2(io.DisplaySize.x * 0.502f - (UI_RIGHTBAR_WIDTH / 3),
+      ImVec2(io.DisplaySize.x * 0.5f - (UI_RIGHTBAR_WIDTH / 3) - 10.0f,
              io.DisplaySize.y * 0.483f),
       ImGuiCond_Always, ImVec2(0.5f, 0.5f));
   ImGui::SetNextWindowSize(
