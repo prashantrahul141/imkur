@@ -3,7 +3,7 @@
 #include "src/config.hpp"
 
 int main(int argc, char *argv[]) {
-#ifdef DEBUD_BUILD
+#ifdef DEBUG_BUILD
   void *fd = NULL;
 #else
   void *fd = fopen("logs.txt", "w");
