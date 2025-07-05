@@ -126,6 +126,16 @@ void Editor::draw_cirlce(Vec2<std::int32_t> center, Color color) {
 }
 
 /*
+ * Calls the given plugin's replace image call with required fields.
+ */
+void Editor::replace_image(PLUGIN_REPLACE_IMAGE_FUNCTION_TYPE func,
+                           void *data) {
+  nhlog_debug("Editor:: called replace_image with func = %p", func);
+  func(this->editor_state, this->img, data);
+  this->regen_texture();
+}
+
+/*
  * Puts color at a specific location.
  */
 void Editor::put_pixel(Color color, ImVec2 pos) {

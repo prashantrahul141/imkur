@@ -1,6 +1,7 @@
 #pragma once
 #include "common.hpp"
 #include "glad/glad.h"
+#include "src/plugins_manager.hpp"
 #include <cstdint>
 
 class Editor {
@@ -41,6 +42,11 @@ public:
    * Draws a cirlce around the given point according to internal size paramter.
    */
   void draw_cirlce(Vec2<std::int32_t> center, Color color);
+
+  /*
+   * Calls the given plugin's replace image call with required fields.
+   */
+  void replace_image(PLUGIN_REPLACE_IMAGE_FUNCTION_TYPE func, void *data);
 
   /*
    * Get color at a specific location.
