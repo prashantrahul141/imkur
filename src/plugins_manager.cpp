@@ -29,6 +29,8 @@ PluginManager::PluginManager() {
     if (nullptr == p.handler) {
       nhlog_error("PluginManager: plugin handler is null for %s",
                   abs_path.c_str());
+      nhlog_error("PluginManager: plugin loading failed due to = %s",
+                  DL_LAST_ERROR());
       continue;
     }
 
