@@ -32,7 +32,8 @@ static nfdfilteritem_t open_dialog_filter_list[1] = {{"Image", "png,jpg,jpeg"}};
 #endif
 
 static void glfw_error_callback(int error, const char *description) {
-  nhlog_error("GLFW ERROR :%d: %s", error, description);
+  nhlog_fatal("GLFW ERROR :%d: %s", error, description);
+  std::abort();
 }
 
 /*
@@ -343,9 +344,60 @@ void UI::update_layout_rightbar() {
           ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNavFocus);
 
   for (size_t i = 0; i < plugins_manager->plugins.size(); i++) {
-    if (PLUGIN_TYPE_REPLACE_IMAGE !=
-        plugins_manager->plugins[i].info_function()->plugin_type) {
+    Plugin plugin = plugins_manager->plugins[i];
+    PluginInfo *info = plugin.info_function();
+
+    if (PLUGIN_TYPE_REPLACE_IMAGE != info->plugin_type) {
       continue;
+    }
+
+    if (ImGui::CollapsingHeader(info->name)) {
+      ImGui::PushFontSize(ImGui::GetFontSize() * 0.8f);
+      if (ImGui::BeginItemTooltip()) {
+        ImGui::Text("%s", info->description);
+        ImGui::EndTooltip();
+      }
+
+      char *vars_data_ptr = (char *)plugin.replace_image_data;
+
+      // vars
+      for (size_t i = 0; i < info->vars_len; i++) {
+        auto var = info->vars[i];
+        switch (var.type) {
+        case TYPE_FLOAT: {
+          static float value = var.default_value.default_float;
+          ImGui::InputFloat(var.name, &value, 0, 0, 0);
+          memcpy(vars_data_ptr, &value, sizeof(float));
+          vars_data_ptr += sizeof(float);
+          break;
+        }
+        case TYPE_INT: {
+          static int32_t value = var.default_value.default_int;
+          ImGui::InputInt(var.name, &value, 0, 0, 0);
+          memcpy(vars_data_ptr, &value, sizeof(int32_t));
+          vars_data_ptr += sizeof(int32_t);
+          break;
+        }
+
+        case TYPE_BOOL: {
+          static bool value = var.default_value.default_bool;
+          ImGui::Checkbox(var.name, &value);
+          memcpy(vars_data_ptr, &value, sizeof(bool));
+          vars_data_ptr += sizeof(bool);
+          break;
+        }
+        default: {
+          nhlog_error("UI: var.type invalid for %s", info->name);
+          std::abort();
+        }
+        }
+      }
+
+      if (ImGui::Button("Apply")) {
+        App::global_app_context->editor.replace_image(
+            plugin.callback.replace_image, plugin.replace_image_data);
+      };
+      ImGui::PopFontSize();
     }
   }
 
