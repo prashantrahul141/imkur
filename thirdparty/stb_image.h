@@ -1,3 +1,6 @@
+// this disables all warnings from this file
+#pragma clang system_header
+
 /* stb_image - v2.30 - public domain image loader - http://nothings.org/stb
                                   no warranty implied; use at your own risk
 
