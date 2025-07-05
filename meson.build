@@ -109,7 +109,8 @@ message('building plugins')
 plugins_out_dir = join_paths(meson.project_build_root(), 'plugins')
 
 plugin_src = files(
-  'plugins/pencil.cpp'
+  'plugins/pencil.cpp',
+  'plugins/blur_filter.cpp'
 )
 foreach plugin_file: plugin_src
   plugin_target = shared_module(fs.stem(plugin_file), plugin_file, native: true)
