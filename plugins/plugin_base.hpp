@@ -23,6 +23,13 @@ struct Color {
 };
 
 /*
+ *  Represents one pixel with bigger type for operations such as accumulation
+ */
+struct LColor {
+  uint32_t r, g, b, a;
+};
+
+/*
  * Position
  */
 struct ZUVec2 {
