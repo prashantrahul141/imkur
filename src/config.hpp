@@ -1,4 +1,5 @@
 #pragma once
+#include <imgui.h>
 
 // NHLOG_OFF
 #define APPLICATION_DEBUG_LEVEL NHLOG_DEBUG
@@ -19,6 +20,11 @@
 #define UI_IMAGE_MIN_SCALE 0.15f
 #define UI_IMAGE_SCROLL_RATE                                                   \
   10.0f / 100.0f // % of image to move when scrolled horizontally or vertically
+
+// Shortcuts
+#define UI_SHORTCUT_OPEN_FILE (ImGuiKey_O | ImGuiMod_Ctrl)
+#define UI_SHORTCUT_SAVE_FILE (ImGuiKey_S | ImGuiMod_Ctrl)
+#define UI_SHORTCUT_QUIT_APPLICATION (ImGuiKey_Q | ImGuiMod_Ctrl)
 
 #define UI_SWATCH_1 1.0f, 1.0f, 1.0f, 1.0f
 #define UI_SWATCH_2 0.0f, 0.0f, 0.0f, 1.0f

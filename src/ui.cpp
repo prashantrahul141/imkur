@@ -175,11 +175,31 @@ bool UI::update_state() {
  */
 void UI::update_layout() {
   nhlog_trace("UI: update layout");
+  this->add_global_shortcuts();
   this->update_layout_menubar();
   this->update_layout_sidebar();
   this->update_layout_rightbar();
   this->update_layout_bottombar();
   this->update_layout_image_window();
+}
+
+/*
+ * Adds global shortcuts
+ */
+void UI::add_global_shortcuts() {
+  if (ImGui::Shortcut(UI_SHORTCUT_OPEN_FILE, ImGuiInputFlags_RouteGlobal)) {
+    nhlog_debug("UI: shortcut used to open file.");
+    menu_callback_file_open();
+  } else if (ImGui::Shortcut(UI_SHORTCUT_SAVE_FILE,
+                             ImGuiInputFlags_RouteGlobal)) {
+    nhlog_debug("UI: shortcut used to save file.");
+    if (nullptr != App::global_app_context->editor.img.data) {
+      menu_callback_save_open();
+    }
+  } else if (ImGui::Shortcut(UI_SHORTCUT_QUIT_APPLICATION)) {
+    nhlog_debug("UI: shortcut used to quit application.");
+    std::exit(0);
+  }
 }
 
 /*
@@ -630,7 +650,8 @@ void UI::menu_callback_save_open() {
     return;
   }
   nfdchar_t *out_path;
-  nfdresult_t result = NFD_SaveDialog(&out_path, open_dialog_filter_list, 1, NULL, default_path);
+  nfdresult_t result =
+      NFD_SaveDialog(&out_path, open_dialog_filter_list, 1, NULL, default_path);
   if (NFD_OKAY == result) {
     nhlog_info("UI: selected file = %s", out_path);
     App::global_app_context->editor.save_image(out_path);

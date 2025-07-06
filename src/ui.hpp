@@ -87,6 +87,11 @@ private:
   void update_layout();
 
   /*
+   * Adds global shortcuts
+   */
+  void add_global_shortcuts();
+
+  /*
    * Layout functions
    */
   void update_layout_menubar();
