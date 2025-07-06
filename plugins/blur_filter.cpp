@@ -1,5 +1,4 @@
 #include "plugin_base.hpp"
-#include "thirdparty/nhlog.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -16,8 +15,8 @@ static VariableMeta vars[vars_len] = {
      .range = {.min = 1.0f, .max = 99999999.0f, .step = 1.0f}}};
 
 static PluginInfo plugin_info = {
-    .name = "Blur",
-    .description = "Blur filter",
+    .name = "Box Blur",
+    .description = "Box blur filter",
     .plugin_type = PluginType::PLUGIN_TYPE_REPLACE_IMAGE,
     .vars = vars,
     .vars_len = vars_len,
