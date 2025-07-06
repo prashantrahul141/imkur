@@ -44,6 +44,7 @@
   0.05882352941f, 0.05882352941f, 0.05882352941f, 1.0f
 #define COLOR_SECONDARY_BACKGROUND                                             \
   0.06882352943f, 0.06882352941f, 0.06882352941f, 1.0f
+#define COLOR_MUTED 0.2f, 0.2f, 0.2f, 1.0f
 
 #define _COLOR_ICON_R 255
 #define _COLOR_ICON_G 255

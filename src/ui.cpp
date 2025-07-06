@@ -230,25 +230,15 @@ void UI::update_layout_sidebar() {
       continue;
     }
 
-    if (i == this->active_plugin_index) {
-      ImGui::PushStyleColor(ImGuiCol_Button,
-                            ImVec4(COLOR_SECONDARY_BACKGROUND));
-
-      if (ImGui::ImageButton(plugin.info_function()->name,
-                             plugin.icon.texture_id,
-                             ImVec2(PLUGIN_ICON_SIZE, PLUGIN_ICON_SIZE))) {
-        this->active_plugin_index = i;
-      }
-
-      ImGui::PopStyleColor();
-    } else {
-      if (ImGui::ImageButton(plugin.info_function()->name,
-                             plugin.icon.texture_id,
-                             ImVec2(PLUGIN_ICON_SIZE, PLUGIN_ICON_SIZE))) {
-        this->active_plugin_index = i;
-      }
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(i == this->active_plugin_index
+                                                      ? COLOR_PRIMARY_BACKGROUND
+                                                      : COLOR_MUTED));
+    if (ImGui::ImageButton(plugin.info_function()->name, plugin.icon.texture_id,
+                           ImVec2(PLUGIN_ICON_SIZE, PLUGIN_ICON_SIZE))) {
+      this->active_plugin_index = i;
     }
 
+    ImGui::PopStyleColor();
     if (ImGui::BeginItemTooltip()) {
       ImGui::Text("%s", plugin.info_function()->name);
       ImGui::PushFontSize(ImGui::GetFontSize() * 0.8f);
@@ -640,8 +630,7 @@ void UI::menu_callback_save_open() {
     return;
   }
   nfdchar_t *out_path;
-  nfdresult_t result =
-      NFD_SaveDialog(&out_path, open_dialog_filter_list, 1, NULL, default_path);
+  nfdresult_t result = NFD_SaveDialog(&out_path, open_dialog_filter_list, 1, NULL, default_path);
   if (NFD_OKAY == result) {
     nhlog_info("UI: selected file = %s", out_path);
     App::global_app_context->editor.save_image(out_path);
